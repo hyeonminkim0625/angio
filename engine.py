@@ -119,11 +119,9 @@ def evaluate(model, criterion, data_loader, device, args):
                 else:
                     img = (outputs[j]*255).to(dtype=torch.uint8,device='cpu')
 
-                print(paths[j])
-
                 pred_file_name = args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j].split('.')[0]+'_pred.png'
                 target_file_name =  args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j].split('.')[0]+'_target.png'
-                data_path = "/data/IVUS_extract/"+str(paths[j].split('_')[0]) + "/roi_image/"+str((paths[j].split('_')[1]).split('.')[0])+".png"
+                data_path = '/data/angiosegmentation/raw_img/a-'+paths[j]+'.jpg'
 
                 """
                 prediction mask
