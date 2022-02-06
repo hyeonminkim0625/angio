@@ -23,11 +23,22 @@ class Angio_Dataset(torch.utils.data.Dataset):
         """
         roi == 1
         """
-
+        img_dict=[]
         if not os.path.exists("./trainset.npy"):
             
-            self.image_path = glob("/data/angiosegmentation/raw_img/*.jpg")
-            self.image_path = [p for p in self.image_path if '(' not in p]
+            f = open("/data/angiosegmentation/segment_roi_points.txt", 'r')
+            lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                name, x1, y1, x2, y2 = line.split(' ')
+                name = name.split('-')[1].replace('.jpg','')
+
+                temp = {}
+                temp['img_path'] = '/data/angiosegmentation/raw_img/a-'+name+'.jpg'
+                temp['coordinate'] = (x1, y1, x2, y2)
+                img_dict.append(temp)
+
+            self.image_path = [p for p in img_dict if '(' not in p['img_path']]
             random.shuffle(self.image_path)
 
             trainset_list = self.image_path[: int(len(self.image_path)*0.8)]
@@ -38,18 +49,19 @@ class Angio_Dataset(torch.utils.data.Dataset):
             np.save('./validationset.npy',np.array(validation_list))
             np.save('./testset.npy',np.array(testset_list))
 
+
         if mode == "train":
             path_list = np.load("./trainset.npy")
-            self.image_path = [[i,'/data/angiosegmentation/mask_correct/b-'+i.split('-')[1].replace('.jpg','_M.png')] for i in path_list]
+            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),temp['coordinate']] for i in path_list]
             self.mode = "train"
 
         elif mode == "val":
             path_list = np.load("./validationset.npy")
-            self.image_path = [[i,'/data/angiosegmentation/mask_correct/b-'+i.split('-')[1].replace('.jpg','_M.png')] for i in path_list]
+            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),temp['coordinate']] for i in path_list]
             self.mode = "val"
         elif mode == "test":
             path_list = np.load("./testset.npy")
-            self.image_path = [[i,'/data/angiosegmentation/mask_correct/b-'+i.split('-')[1].replace('.jpg','_M.png')] for i in path_list]
+            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),temp['coordinate']] for i in path_list]
             self.mode = "test"
 
         self.num_classes = num_classes
@@ -78,6 +90,15 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target = target.astype(np.float32)
         img = img_load(image_path)
 
+        x1, y1, x2, y2 = self.image_path[index][2]
+        annotated_dot = np.zeros((512,512))
+        annotated_dot[int(y1),int(x1)]=255
+        annotated_dot[int(y2),int(x2)]=255
+
+        annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
+
+        img[:,:,2] = annotated_dot
+
         if self.mode == "train":
             transformed = self.transform(image=img, mask=target)
             target = TF.to_tensor(transformed['mask'])
@@ -102,6 +123,7 @@ def make_transform(args):
     A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
+    A.RandomBrightnessContrast(p=0.5)
     ])
     return transform
 
