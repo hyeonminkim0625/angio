@@ -93,8 +93,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
             annotated_dot = np.zeros((512,512))
-            annotated_dot[int(x1),int(y1)]=255# y1 x1
-            annotated_dot[int(x2),int(y2)]=255
+            annotated_dot[int(y1),int(x1)]=255# y1 x1
+            annotated_dot[int(y2),int(x2)]=255
 
             annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
 
