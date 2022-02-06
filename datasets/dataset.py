@@ -70,7 +70,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         target_index = img_load(self.image_path[index][1])
 
-        h,w = target_index.shape
+        h,w,_ = target_index.shape
         target = np.zeros((h,w,self.num_classes))
         for i in range(self.num_classes):
             target[:,:,i] = (target_index==i)*1
