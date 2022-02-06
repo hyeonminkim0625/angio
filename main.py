@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from pathlib import Path
 
-from models.model import BaseLine_wrapper, Conv3D_wapper, LSTM_wrapper
+from models.model import BaseLine_wrapper
 from models.loss import Loss_wrapper, Binary_Loss_wrapper
 from engine import train_one_epoch, evaluate
 from models.unet_plusplus import Nested_UNet
@@ -67,10 +67,6 @@ def train(args):
 
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus":
         model = BaseLine_wrapper(args)
-    elif args.model == 'unet_lstm':
-        model = LSTM_wrapper(args)
-    elif args.model == 'unet_3d':
-        model = Conv3D_wapper(args)
     else:
         print("model input error")
         exit()
@@ -193,7 +189,7 @@ if __name__ == '__main__':
                     break
 
     if args.wandb:
-        wandb.init(project='IVUS_'+args.model+'_'+args.mode,entity="medi-whale")
+        wandb.init(project='angio_'+args.model+'_'+args.mode,entity="medi-whale")
         wandb.config.update(args)
     if args.eval:
         eval(args)
