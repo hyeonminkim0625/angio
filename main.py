@@ -13,7 +13,7 @@ from models.unet_plusplus import Nested_UNet
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 import torch.multiprocessing as mp
-from datasets.dataset import IVUS_Dataset
+from datasets.dataset import Angio_Dataset
 import wandb
 import os
 import numpy as np
@@ -101,10 +101,10 @@ def train(args):
     model.to(device)
     criterion.to(device)
 
-    train_dataset = IVUS_Dataset(args.num_classes,mode = "train",args=args)
+    train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
     train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=True)
 
-    val_dataset = IVUS_Dataset(args.num_classes,mode = "val",args=args)
+    val_dataset = Angio_Dataset(args.num_classes,mode = "val",args=args)
     val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=True)
 
     for i in range(args.epochs):
@@ -128,10 +128,6 @@ def eval(args):
     model = None
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus":
         model = Nested_UNet(3,3,deep_supervision=True)
-    elif args.model == 'unet_lstm':
-        model = LSTM_wrapper(args)
-    elif args.model == 'unet_3d':
-        model = Conv3D_wapper(args)
     else:
         print("model input error")
         exit()
@@ -155,7 +151,7 @@ def eval(args):
     model.to(device)
     criterion.to(device)
 
-    val_dataset = IVUS_Dataset(args.num_classes,mode = args.mode,args=args)
+    val_dataset = Angio_Dataset(args.num_classes,mode = args.mode,args=args)
     val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size)
 
     if args.weight_path is not "/":
