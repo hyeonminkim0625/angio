@@ -68,6 +68,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
        
         image_path = self.image_path[index][0]
 
+        print(self.image_path[index][1])
         target_index = img_load(self.image_path[index][1])
 
         target_index = target_index[:,:,0]
