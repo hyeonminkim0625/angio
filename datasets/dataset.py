@@ -52,7 +52,10 @@ class Angio_Dataset(torch.utils.data.Dataset):
             self.mode = "test"
 
         self.num_classes = num_classes
-        self.transform = make_transform()
+        if self.mode == "train":
+            self.transform = make_transform(args)
+        else:
+            self.transform = make_transform_val(args)
         self.resnet_mean = [0.485, 0.456, 0.406]
         self.resnet_std = [0.229, 0.224, 0.225]
         
@@ -81,8 +84,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
 
         else:
-            target = TF.to_tensor(target)
-            img = TF.to_tensor(img)
+            transformed = self.transform(image=img, mask=target)
+            target = TF.to_tensor(transformed['mask'])
+            img = TF.to_tensor(transformed['image'])
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
 
         #return img target patient num
@@ -91,10 +95,17 @@ class Angio_Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.image_path)
 
-def make_transform():
+def make_transform(args):
     transform = A.Compose([
-    A.RandomResizedCrop(width=256, height=256, scale=(0.8,1.0),p=0.5),
+    A.Resize(width=args.img_size, height=args.img_size),
+    A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
+    ])
+    return transform
+
+def make_transform_val(args):
+    transform = A.Compose([
+    A.Resize(width=args.img_size, height=args.img_size),
     ])
     return transform
