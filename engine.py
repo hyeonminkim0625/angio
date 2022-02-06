@@ -165,10 +165,10 @@ def evaluate(model, criterion, data_loader, device, args):
                 copyfile(target_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.png')
                 copyfile(pred_file_name.replace('png','npy'),args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.npy')
                 copyfile(target_file_name.replace('png','npy'),args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.npy')
-                copyfile(args.output_dir+'_'+args.model+'_'+args.mode+"/"+j['path']+".png",args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".png")
+                copyfile(args.output_dir+'_'+args.model+'_'+args.mode+"/"+j['path']+".jpg",args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".jpg")
                 
                 if args.wandb:
-                    bg_img = cv2.imread(args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".png")
+                    bg_img = cv2.imread(args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".jpg")
 
                     pred_mask = np.load(pred_file_name.replace('png','npy'))
                     target_mask = np.load(target_file_name.replace('png','npy'))
