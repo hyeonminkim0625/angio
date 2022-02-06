@@ -115,7 +115,7 @@ def evaluate(model, criterion, data_loader, device, args):
                 img = None
 
                 if args.onlymask:
-                    img = torch.zeros_like(outputs[j],dtype=torch.uint8,device='cpu')
+                    img = torch.zeros_like(samples[j],dtype=torch.uint8,device='cpu')
                 else:
                     img = (outputs[j]*255).to(dtype=torch.uint8,device='cpu')
 
