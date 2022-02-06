@@ -92,24 +92,9 @@ def evaluate(model, criterion, data_loader, device, args):
                 pass
 
 
-            class1_iou ,class2_iou = calculate_iou(output_mask,target_mask,args.num_classes)
+            class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
 
             info_dictionary["class1_iou"]=float(class1_iou)
-            info_dictionary["class2_iou"]=float(class2_iou)
-
-            if args.hausdorff_distance:
-
-                class1_pred_mask = calculate_overlab_contour(output_mask[1])
-                class2_pred_mask = calculate_overlab_contour(output_mask[2])
-
-                class1_target_mask = calculate_overlab_contour(target_mask[1])
-                class2_target_mask = calculate_overlab_contour(target_mask[2])
-                
-                class1_hausdorff_distance = directed_hausdorff(class1_pred_mask,class1_target_mask)
-                class2_hausdorff_distance = directed_hausdorff(class2_pred_mask,class2_target_mask)
-
-                info_dictionary["class1_hausdorff_distance"]=class1_hausdorff_distance
-                info_dictionary["class2_hausdorff_distance"]=class2_hausdorff_distance
 
             path_iou_array.append(
                 info_dictionary
@@ -192,11 +177,10 @@ def evaluate(model, criterion, data_loader, device, args):
 
                     labels = {
                     1: "class 1",
-                    2: "class 2",
                     }
 
                     temp_dict = {}
-                    temp_dict["hard_sample"] = wandb.Image(bg_img,caption=f"class 1 iou : {j['class1_iou']*100}, class 2 iou : {j['class2_iou']*100}, {j['path']}", masks={
+                    temp_dict["hard_sample"] = wandb.Image(bg_img,caption=f"class 1 iou : {j['class1_iou']*100},  {j['path']}", masks={
                     "prediction" : {"mask_data" : pred_mask, "class_labels" : labels},
                     "ground truth" : {"mask_data" : target_mask, "class_labels" : labels}})
 
@@ -215,7 +199,7 @@ def evaluate(model, criterion, data_loader, device, args):
                 temp = np.array([p['class'+str(i)+'_hausdorff_distance'] for p in path_iou_array])
                 wandb_dict["class"+str(i)+" hausdorff_distance"] = np.mean(temp)
         
-        wandb_dict["total iou"] = (wandb_dict['class1 iou']+wandb_dict['class2 iou'])/2.0
+        wandb_dict["total iou"] = wandb_dict['class1 iou']
 
         if args.hausdorff_distance:
             wandb_dict["total hausdorff_distance"] = (wandb_dict['class1 hausdorff_distance']+wandb_dict['class2 hausdorff_distance'])/2.0
