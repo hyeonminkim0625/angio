@@ -90,7 +90,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target = target.astype(np.float32)
         img = img_load(image_path)
 
-        if self.args.withcoordinate:
+        if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
             annotated_dot = np.zeros((512,512))
             annotated_dot[int(x1),int(y1)]=255# y1 x1
@@ -99,7 +99,15 @@ class Angio_Dataset(torch.utils.data.Dataset):
             annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
 
             img[:,:,2] = annotated_dot
-
+        elif self.args.withcoordinate=='add':
+            x1, y1, x2, y2 = self.image_path[index][2]
+            img = cv2.circle(img,(int(x1),int(y1)),5,(255,255,255),thickness=-1)
+            img = cv2.circle(img,(int(x2),int(y2)),5,(255,255,255),thickness=-1)
+        else:
+            """
+            no use
+            """
+            pass
         if self.mode == "train":
             transformed = self.transform(image=img, mask=target)
             target = TF.to_tensor(transformed['mask'])
