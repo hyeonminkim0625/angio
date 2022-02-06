@@ -29,13 +29,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     batch_num = len(data_loader)
     for samples, targets, _ in tqdm(data_loader):
 
-        anchor = samples["anchor"].to(device)
-        support = [s.to(device) for s in samples["support"]]
-        #for s in samples["support"]:
-        #    print(s.shape)
-        #print(len(support))
-        # tensor ~~~ len
-        samples = {"anchor" : anchor, "support" : support}
+        samples = samples.to(device)
 
         targets = targets.to(device)
 

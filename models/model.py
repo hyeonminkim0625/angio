@@ -48,7 +48,7 @@ class BaseLine_wrapper(nn.Module):
             self.model = DeepLab(backbone='xception', output_stride=8, num_classes=_num_classes,sync_bn=False, freeze_bn=False)
 
     def forward(self, x):
-        x = self.model(x['anchor'])['out']
+        x = self.model(x)['out']
         return x
 
 class LSTM_wrapper(nn.Module):
