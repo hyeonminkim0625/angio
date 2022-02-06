@@ -133,7 +133,7 @@ def make_transform(args):
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
     #A.RandomBrightnessContrast(brightness_limit=0.8,contrast_limit=0.8,p=0.5),#option1
-    A.Equalize(),
+    #A.Equalize(),
     ])
     return transform
 
