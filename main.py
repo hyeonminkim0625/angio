@@ -37,7 +37,7 @@ def get_args_parser():
     parser.add_argument('--loss', default="crossentropy", type=str)
     parser.add_argument('--opt', default="rll", type=str)
     parser.add_argument('--img_size', default=512, type=int)
-    parser.add_argument('--withcoordinate', action='concat')
+    parser.add_argument('--withcoordinate', default='concat', type=str)
 
 
     #model config
