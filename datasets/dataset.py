@@ -124,7 +124,7 @@ def make_transform(args):
     A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
-    A.RandomBrightnessContrast(p=0.5)
+    #A.RandomBrightnessContrast(p=0.5)
     ])
     return transform
 
