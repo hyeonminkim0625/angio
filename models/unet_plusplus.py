@@ -66,7 +66,7 @@ class Nested_UNet(nn.Module):
 
     def forward(self, x):                    # (Batch, 3, 256, 256)
 
-        x0_0 = self.conv0_0(x['anchor'])               
+        x0_0 = self.conv0_0(x)               
         x1_0 = self.conv1_0(self.pool(x0_0))
         x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], dim=1))
         
@@ -94,4 +94,4 @@ class Nested_UNet(nn.Module):
         else:
             output = self.output(x0_4)
 
-        return output
+        return {"out" : output}

@@ -16,6 +16,8 @@ import pickle
 from metric import averaged_hausdorff_distance as ahd, calculate_iou, calculate_overlab_contour
 from scipy.spatial.distance import directed_hausdorff
 import torch.nn.functional as F
+import pydensecrf.densecrf as dcrf
+
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
@@ -62,6 +64,7 @@ def evaluate(model, criterion, data_loader, device, args):
     batch_num = len(data_loader)
 
     path_iou_array=[]
+    
 
     for samples, targets,paths in tqdm(data_loader):
         anchor = samples["anchor"].to(device)
@@ -78,6 +81,9 @@ def evaluate(model, criterion, data_loader, device, args):
         num_classes = outputs.shape[1]
 
         #calculate by batch
+
+        if args.crf:
+            outputs = torch.softmax(outputs,dim=1)
         for j in range(anchor.shape[0]):
 
             """
@@ -93,10 +99,11 @@ def evaluate(model, criterion, data_loader, device, args):
                 target_mask = F.one_hot(torch.argmax(targets[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
 
             else:
-                output_mask = outputs[j] > 0.5
-                target_mask = targets[j] > 0.5
+                pass
+
 
             class1_iou ,class2_iou = calculate_iou(output_mask,target_mask,args.num_classes)
+
             info_dictionary["class1_iou"]=float(class1_iou)
             info_dictionary["class2_iou"]=float(class2_iou)
 
@@ -122,14 +129,20 @@ def evaluate(model, criterion, data_loader, device, args):
             save pic, optional
             """
             if args.saveallfig:
-                output_mask = outputs[j] > 0.5           
-                output_mask = output_mask.to(dtype=torch.bool)
+                if args.mask_argmax:
+                # [h,w,class] -> [class,h,w]
+                    output_mask = F.one_hot(torch.argmax(outputs[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
+                    target_mask = F.one_hot(torch.argmax(targets[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
+                else:
+                    pass
+                output_mask = output_mask[1:].to(dtype=torch.bool, device='cpu')
+                target_mask = target_mask[1:].to(dtype=torch.bool, device='cpu')
                 img = None
 
                 if args.onlymask:
-                    img = torch.zeros_like(samples[j]).to(dtype=torch.uint8,device='cpu')
+                    img = torch.zeros_like(outputs[j],dtype=torch.uint8,device='cpu')
                 else:
-                    img = (samples[j]*255).to(dtype=torch.uint8,device='cpu')
+                    img = (outputs[j]*255).to(dtype=torch.uint8,device='cpu')
 
                 pred_file_name = args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j].split('.')[0]+'_pred.png'
                 target_file_name =  args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j].split('.')[0]+'_target.png'
@@ -138,13 +151,13 @@ def evaluate(model, criterion, data_loader, device, args):
                 """
                 prediction mask
                 """
-                saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask.to(device='cpu'))
+                saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask,colors=[(255,0,51),(102,255,102)])
                 torchvision.utils.save_image(saveimg/255.0 ,pred_file_name)
 
                 """
                 target mask
                 """
-                saveimg = torchvision.utils.draw_segmentation_masks(img,targets[j].to(device='cpu',dtype=torch.bool))
+                saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask,colors=[(255,0,51),(102,255,102)])
                 torchvision.utils.save_image(saveimg/255.0 , target_file_name)
 
                 """
@@ -158,11 +171,9 @@ def evaluate(model, criterion, data_loader, device, args):
 
                 copyfile(data_path,"./"+args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j])
 
-                temp_target = (targets[j].to(device='cpu',dtype=torch.bool)).numpy()
-                temp_output_mask = output_mask.to(device='cpu').numpy()
 
-                np.save(pred_file_name.replace('png','npy'),temp_output_mask)
-                np.save(target_file_name.replace('png','npy'),temp_target)
+                np.save(pred_file_name.replace('png','npy'),output_mask)
+                np.save(target_file_name.replace('png','npy'),target_mask)
     
     if args.report_hard_sample != 0:
         with open(args.output_dir+'_'+args.model+'_'+args.mode+'/'+'iou_array.npy','wb') as f:
@@ -170,7 +181,6 @@ def evaluate(model, criterion, data_loader, device, args):
         for i in range(1,num_classes):
             path_iou_array = sorted(path_iou_array, key= lambda p : (p['class'+str(i)+'_iou']))
             topk_path_iou_array = path_iou_array[:args.report_hard_sample]
-
             for j in topk_path_iou_array:
 
                 pred_file_name = args.output_dir+'_'+args.model+'_'+args.mode+'/'+j['path']+'_pred.png'
@@ -196,7 +206,7 @@ def evaluate(model, criterion, data_loader, device, args):
                     }
 
                     temp_dict = {}
-                    temp_dict["hard_sample"] = wandb.Image(bg_img,caption=f"class 1 iou : {j['class1_iou']*100}, class 2 iou : {j['class2_iou']*100}", masks={
+                    temp_dict["hard_sample"] = wandb.Image(bg_img,caption=f"class 1 iou : {j['class1_iou']*100}, class 2 iou : {j['class2_iou']*100}, {j['path']}", masks={
                     "prediction" : {"mask_data" : pred_mask, "class_labels" : labels},
                     "ground truth" : {"mask_data" : target_mask, "class_labels" : labels}})
 
@@ -221,3 +231,7 @@ def evaluate(model, criterion, data_loader, device, args):
             wandb_dict["total hausdorff_distance"] = (wandb_dict['class1 hausdorff_distance']+wandb_dict['class2 hausdorff_distance'])/2.0
 
         wandb.log(wandb_dict)
+    if args.eval:
+        for i in range(1,num_classes):
+            temp = np.array([p['class'+str(i)+'_iou'] for p in path_iou_array])
+            print("class"+str(i)+" iou", np.mean(temp)*100)
