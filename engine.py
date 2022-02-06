@@ -144,7 +144,7 @@ def evaluate(model, criterion, data_loader, device, args):
                 5. prediction mask array npy
                 """
 
-                copyfile(data_path,"./"+args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j])
+                copyfile(data_path,"./"+args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j]+'.png')
 
 
                 np.save(pred_file_name.replace('png','npy'),output_mask)
