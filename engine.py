@@ -61,11 +61,7 @@ def evaluate(model, criterion, data_loader, device, args):
     
 
     for samples, targets,paths in tqdm(data_loader):
-        anchor = samples["anchor"].to(device)
-        support = [s.to(device) for s in samples["support"]]
-
-        samples = {"anchor" : anchor, "support" : support}
-
+        samples = samples.to(device)
         targets = targets.to(device)
         
         outputs = model(samples)
@@ -78,7 +74,7 @@ def evaluate(model, criterion, data_loader, device, args):
 
         if args.crf:
             outputs = torch.softmax(outputs,dim=1)
-        for j in range(anchor.shape[0]):
+        for j in range(samples.shape[0]):
 
             """
             convert probability tensor to mask tensor
