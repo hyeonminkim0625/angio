@@ -153,7 +153,7 @@ def eval(args):
     criterion.to(device)
 
     val_dataset = Angio_Dataset(args.num_classes,mode = args.mode,args=args)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,drop_last=True)
 
     if args.weight_path is not "/":
         checkpoint = torch.load(args.weight_path)
