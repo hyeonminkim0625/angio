@@ -52,16 +52,16 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         if mode == "train":
             path_list = np.load("./trainset.npy",allow_pickle=True)
-            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),temp['coordinate']] for i in path_list]
+            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),i['coordinate']] for i in path_list]
             self.mode = "train"
 
         elif mode == "val":
             path_list = np.load("./validationset.npy",allow_pickle=True)
-            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),temp['coordinate']] for i in path_list]
+            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),i['coordinate']] for i in path_list]
             self.mode = "val"
         elif mode == "test":
             path_list = np.load("./testset.npy",allow_pickle=True)
-            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),temp['coordinate']] for i in path_list]
+            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),i['coordinate']] for i in path_list]
             self.mode = "test"
 
         self.num_classes = num_classes
