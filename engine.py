@@ -94,7 +94,7 @@ def evaluate(model, criterion, data_loader, device, args):
 
             class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
 
-            info_dictionary["class1_iou"]=float(class1_iou)
+            info_dictionary["class1_iou"]=float(class1_iou[0])
 
             path_iou_array.append(
                 info_dictionary
