@@ -110,8 +110,8 @@ def evaluate(model, criterion, data_loader, device, args):
                     target_mask = F.one_hot(torch.argmax(targets[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
                 else:
                     pass
-                output_mask = output_mask[1:].to(dtype=torch.bool, device='cpu')
-                target_mask = target_mask[1:].to(dtype=torch.bool, device='cpu')
+                output_mask = output_mask.to(dtype=torch.bool, device='cpu')
+                target_mask = target_mask.to(dtype=torch.bool, device='cpu')
                 img = None
 
                 if args.onlymask:
@@ -126,13 +126,13 @@ def evaluate(model, criterion, data_loader, device, args):
                 """
                 prediction mask
                 """
-                saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask,colors=[(255,0,51),(102,255,102)])
+                saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask[1:],colors=[(255,0,51),(102,255,102)])
                 torchvision.utils.save_image(saveimg/255.0 ,pred_file_name)
 
                 """
                 target mask
                 """
-                saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask,colors=[(255,0,51),(102,255,102)])
+                saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask[1:],colors=[(255,0,51),(102,255,102)])
                 torchvision.utils.save_image(saveimg/255.0 , target_file_name)
 
                 """
