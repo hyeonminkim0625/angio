@@ -90,14 +90,15 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target = target.astype(np.float32)
         img = img_load(image_path)
 
-        x1, y1, x2, y2 = self.image_path[index][2]
-        annotated_dot = np.zeros((512,512))
-        annotated_dot[int(y1),int(x1)]=255
-        annotated_dot[int(y2),int(x2)]=255
+        if self.args.withcoordinate:
+            x1, y1, x2, y2 = self.image_path[index][2]
+            annotated_dot = np.zeros((512,512))
+            annotated_dot[int(y1),int(x1)]=255
+            annotated_dot[int(y2),int(x2)]=255
 
-        annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
+            annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
 
-        img[:,:,2] = annotated_dot
+            img[:,:,2] = annotated_dot
 
         if self.mode == "train":
             transformed = self.transform(image=img, mask=target)
