@@ -27,8 +27,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
         if not os.path.exists("./trainset.npy"):
             
             self.image_path = glob("/data/angiosegmentation/raw_img/*.jpg")
+            self.image_path = [p for p in self.image_path if '(' not in p]
             random.shuffle(self.image_path)
-            
+
             trainset_list = self.image_path[: int(len(self.image_path)*0.8)]
             validation_list = self.image_path[int(len(self.image_path)*0.8): int(len(self.image_path)*0.9)]
             testset_list = self.image_path[int(len(self.image_path)*0.9):]
