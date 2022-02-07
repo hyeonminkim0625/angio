@@ -60,8 +60,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
             self.transform = make_transform(args)
         else:
             self.transform = make_transform_val(args)
-        self.resnet_mean = [0.485, 0.456, 0.406]
-        self.resnet_std = [0.229, 0.224, 0.225]
+        self.resnet_mean = [0.485, 0.456, 0.0]
+        self.resnet_std = [0.229, 0.224, 1.0]
         
     def __getitem__(self, index):
 
@@ -83,11 +83,11 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
-            annotated_dot = np.zeros((512,512))
+            annotated_dot = np.zeros((self.args.img_size,self.args.img_size))
             annotated_dot[int(y1),int(x1)]=255# y1 x1
             annotated_dot[int(y2),int(x2)]=255
 
-            annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
+            annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)
 
             img[:,:,2] = annotated_dot
         elif self.args.withcoordinate=='add':
@@ -123,8 +123,8 @@ def make_transform(args):
     A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
-    #A.RandomBrightnessContrast(brightness_limit=0.8,contrast_limit=0.8,p=0.5),#option1
-    #A.Equalize(),
+    A.RandomBrightnessContrast(brightness_limit=0.1,contrast_limit=0.1,p=0.5),#option1
+    A.Equalize(),
     ])
     return transform
 
