@@ -83,7 +83,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
-            annotated_dot = np.zeros((self.args.img_size,self.args.img_size))
+            annotated_dot = np.zeros((512,521))
             annotated_dot[int(y1),int(x1)]=255# y1 x1
             annotated_dot[int(y2),int(x2)]=255
 
@@ -123,8 +123,8 @@ def make_transform(args):
     A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
-    #A.RandomBrightnessContrast(brightness_limit=0.1,contrast_limit=0.1,p=0.5),#option1
-    #A.Equalize(),
+    A.RandomBrightnessContrast(brightness_limit=0.1,contrast_limit=0.1,p=0.5),#option1
+    A.Equalize(),
     ])
     return transform
 
