@@ -29,7 +29,6 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     for samples, targets, _ in tqdm(data_loader):
 
         samples = samples.to(device)
-        print(samples.shape)
 
         targets = targets.to(device)
 
