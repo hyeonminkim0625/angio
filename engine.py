@@ -16,7 +16,6 @@ import pickle
 from metric import averaged_hausdorff_distance as ahd, calculate_iou, calculate_overlab_contour
 from scipy.spatial.distance import directed_hausdorff
 import torch.nn.functional as F
-import pydensecrf.densecrf as dcrf
 
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
@@ -117,7 +116,7 @@ def evaluate(model, criterion, data_loader, device, args):
                 if args.onlymask:
                     img = torch.zeros_like(samples[j],dtype=torch.uint8,device='cpu')
                 else:
-                    img = (outputs[j]*255).to(dtype=torch.uint8,device='cpu')
+                    img = (outputs[j]*255).to(dtype=torch.uint8,device='cpu');
 
                 pred_file_name = args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j].split('.')[0]+'_pred.png'
                 target_file_name =  args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j].split('.')[0]+'_target.png'

@@ -20,49 +20,38 @@ class Angio_Dataset(torch.utils.data.Dataset):
         super(Angio_Dataset, self).__init__()
         self.image_path = None
         self.args = args
+
+        self.angio_list = pd.read_csv('./angio_list.csv')
         """
         roi == 1
         """
-        img_dict=[]
-        if not os.path.exists("./trainset.npy"):
-            
-            f = open("/data/angiosegmentation/segment_roi_points.txt", 'r')
-            lines = f.readlines()
-            for line in lines:
-                line = line.strip()
-                name, x1, y1, x2, y2 = line.split(' ')
-                name = name.split('-')[1].replace('.jpg','')
 
-                temp = {}
-                temp['img_path'] = '/data/angiosegmentation/raw_img/a-'+name+'.jpg'
-                temp['coordinate'] = (x1, y1, x2, y2)
-                img_dict.append(temp)
-
-            self.image_path = [p for p in img_dict if '(' not in p['img_path']]
-            random.shuffle(self.image_path)
-
-            trainset_list = self.image_path[: int(len(self.image_path)*0.8)]
-            validation_list = self.image_path[int(len(self.image_path)*0.8): int(len(self.image_path)*0.9)]
-            testset_list = self.image_path[int(len(self.image_path)*0.9):]
-
-            np.save('./trainset.npy',np.array(trainset_list))
-            np.save('./validationset.npy',np.array(validation_list))
-            np.save('./testset.npy',np.array(testset_list))
-
-
+        not_use = [1336,275,228,248,712,631,268,4,180,1364]
+        not_use = [str(p) for p in not_use]
+         
+        img_list = []
         if mode == "train":
-            path_list = np.load("./trainset.npy",allow_pickle=True)
-            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),i['coordinate']] for i in path_list]
+            for i in self.angio_list.iterrows():
+                if i[1]['train']==1:
+                    if i[1]['origin'].split('-')[1].split('.')[0] not in not_use:
+                        temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'], '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],(i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2'])]
+                        img_list.append(temp)
+                  
+            self.image_path = temp
             self.mode = "train"
 
         elif mode == "val":
-            path_list = np.load("./validationset.npy",allow_pickle=True)
-            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),i['coordinate']] for i in path_list]
+            for i in self.angio_list.iterrows():
+                if i[1]['train']==0:
+                    if i[1]['origin'].split('-')[1].split('.')[0] not in not_use:
+                        temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'], '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],(i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2'])]
+                        img_list.append(temp)                
+                  
+            self.image_path = temp
             self.mode = "val"
-        elif mode == "test":
-            path_list = np.load("./testset.npy",allow_pickle=True)
-            self.image_path = [[i['img_path'],'/data/angiosegmentation/mask_correct/b-'+i['img_path'].split('-')[1].replace('.jpg','_M.png'),i['coordinate']] for i in path_list]
-            self.mode = "test"
+        else:
+            print('error')
+            exit()
 
         self.num_classes = num_classes
         if self.mode == "train":
