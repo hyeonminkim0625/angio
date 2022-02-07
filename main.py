@@ -103,10 +103,10 @@ def train(args):
     criterion.to(device)
 
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=True)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=False)
 
     val_dataset = Angio_Dataset(args.num_classes,mode = "val",args=args)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=False)
 
     for i in range(args.epochs):
         train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
