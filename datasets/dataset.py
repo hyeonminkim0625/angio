@@ -37,8 +37,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
                         temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'], '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],(i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2'])]
                         img_list.append(temp)
                   
-            self.image_path = temp
+            self.image_path = img_list
             self.mode = "train"
+            print('train ',len(self.image_path))
 
         elif mode == "val":
             for i in self.angio_list.iterrows():
@@ -47,8 +48,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
                         temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'], '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],(i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2'])]
                         img_list.append(temp)                
                   
-            self.image_path = temp
+            self.image_path = img_list
             self.mode = "val"
+            print('val ',len(self.image_path))
         else:
             print('error')
             exit()
