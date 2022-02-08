@@ -89,7 +89,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
             annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)
 
-            img[:,:,2] = annotated_dot
+            img[:,:,2] = annotated_dot*10
+            
         elif self.args.withcoordinate=='add':
             x1, y1, x2, y2 = self.image_path[index][2]
             img = cv2.circle(img,(int(x1),int(y1)),5,(255,255,255),thickness=-1)
@@ -107,6 +108,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         else:
             transformed = self.transform(image=img, mask=target)
+            
+            np.where(transformed['mask']==1)
+
             target = TF.to_tensor(transformed['mask'])
             img = TF.to_tensor(transformed['image'])
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
