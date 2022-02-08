@@ -97,8 +97,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
             hm = gaussian_heatmap(sigma=1.6, spread=10)
             center = 8
             annotated_dot = np.zeros((512+center*2,512+center*2))
-            annotated_dot[center+int(y1)-center:center+int(y1)+center,center+int(x1)-center:center+int(x1)+center]=hm# y1 x1
-            annotated_dot[center+int(y2)-center:center+int(y2)+center,center+int(x2)-center:center+int(x2)+center]=hm# y1 x1
+            annotated_dot[center+int(y1)-center:center+int(y1)+center,center+int(x1)-center:center+int(x1)+center] +=hm# y1 x1
+            annotated_dot[center+int(y2)-center:center+int(y2)+center,center+int(x2)-center:center+int(x2)+center] +=hm# y1 x1
 
             img[:,:,2] = annotated_dot[center:512+center,center:512+center]
 
@@ -135,7 +135,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
 def make_transform(args):
     transform = A.Compose([
     A.Resize(width=args.img_size, height=args.img_size),
-    A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
+    #A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
     #A.RandomBrightnessContrast(brightness_limit=0.1,contrast_limit=0.1,p=0.5),#option1
