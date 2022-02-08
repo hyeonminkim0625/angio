@@ -27,6 +27,12 @@ def gaussian_heatmap(sigma: int, spread: int):
     heatmap = (heatmap / np.max(heatmap) * 255).astype(np.uint8)
     return heatmap
 
+def gaussian_heatmap_re(heatmap,x,y):
+    for i_ in range(512):
+        for j_ in range(512):
+            heatmap[i_, j_] += ((y-i_)**2 + (x-j_)**2)**0.2
+    return heatmap
+
 class Angio_Dataset(torch.utils.data.Dataset):
     def __init__(self,num_classes,mode,args):
         super(Angio_Dataset, self).__init__()
@@ -96,13 +102,14 @@ class Angio_Dataset(torch.utils.data.Dataset):
         #img[:,:,1] = histogram_eq(img[:,:,1])
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
-            hm = gaussian_heatmap(sigma=1.6, spread=10)
-            center = 8
-            annotated_dot = np.zeros((512+center*2,512+center*2))
-            annotated_dot[center+int(y1)-center:center+int(y1)+center,center+int(x1)-center:center+int(x1)+center] +=hm# y1 x1
-            annotated_dot[center+int(y2)-center:center+int(y2)+center,center+int(x2)-center:center+int(x2)+center] +=hm# y1 x1
+            annotated_dot = np.zeros((512,512))
 
-            img[:,:,2] = annotated_dot[center:512+center,center:512+center]
+            annotated_dot = gaussian_heatmap_re(annotated_dot,x1,y1)
+            annotated_dot = gaussian_heatmap_re(annotated_dot,x2,y2)
+            annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
+            annotated_dot = 255-annotated_dot
+
+            img[:,:,2] = annotated_dot
 
         elif self.args.withcoordinate=='add':
             x1, y1, x2, y2 = self.image_path[index][2]

@@ -17,11 +17,25 @@ def gaussian_heatmap(sigma: int, spread: int):
     heatmap = (heatmap / np.max(heatmap) * 255).astype(np.uint8)
     return heatmap
 
+def gaussian_heatmap_re(heatmap,x,y):
+    for i_ in range(512):
+        for j_ in range(512):
+            heatmap[i_, j_] += ((x-i_)**2 + (y-j_)**2)**0.2
+    return heatmap
 
-hm = gaussian_heatmap(sigma=1.6, spread=10)
-extent = int(16)
-center = 8
-print(hm)
-annotated_dot[200-center:200+center,200-center:200+center] = hm
-cv2.imshow("hm", annotated_dot)
+annotated_dot = np.zeros((512,512))
+annotated_dot = gaussian_heatmap_re(annotated_dot,200,200)
+annotated_dot = gaussian_heatmap_re(annotated_dot,300,300)
+annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
+annotated_dot = 255-annotated_dot
+
+annotated_dot = annotated_dot.astype(np.uint8)
+print(annotated_dot[100,100])
+print(annotated_dot[80,80])
+
+isotropicGaussianHeatmapImage = cv2.applyColorMap(annotated_dot, 
+                                                  cv2.COLORMAP_JET)
+
+
+cv2.imshow("hm", isotropicGaussianHeatmapImage)
 cv2.waitKey(0)

@@ -37,7 +37,7 @@ def get_args_parser():
     parser.add_argument('--opt', default="rll", type=str)
     parser.add_argument('--img_size', default=512, type=int)
     parser.add_argument('--withcoordinate', default='concat', type=str)
-    parser.add_argument('--coordcoefficient', default=1, type=int)
+    parser.add_argument('--classweight', default=1.0, type=float)
 
 
     #model config
