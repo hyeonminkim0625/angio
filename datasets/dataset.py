@@ -15,6 +15,17 @@ import pdb
 import pandas as pd
 from tqdm import tqdm
 
+def gaussian_heatmap(sigma: int, spread: int):
+    extent = int(spread * sigma)
+    center = spread * sigma / 2
+    heatmap = np.zeros([extent, extent], dtype=np.float32)
+    for i_ in range(extent):
+        for j_ in range(extent):
+            heatmap[i_, j_] = 1 / 2 / np.pi / (sigma ** 2) * np.exp(
+                -1 / 2 * ((i_ - center - 0.5) ** 2 + (j_ - center - 0.5) ** 2) / (sigma ** 2))
+    heatmap = (heatmap / np.max(heatmap) * 255).astype(np.uint8)
+    return heatmap
+
 class Angio_Dataset(torch.utils.data.Dataset):
     def __init__(self,num_classes,mode,args):
         super(Angio_Dataset, self).__init__()
@@ -83,11 +94,11 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
+            hm = gaussian_heatmap(sigma=1.6, spread=10)
+            center = 8
             annotated_dot = np.zeros((512,512))
-            annotated_dot[int(y1),int(x1)]=255# y1 x1
-            annotated_dot[int(y2),int(x2)]=255
-
-            annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*self.args.coordcoefficient
+            annotated_dot[int(y1)-center:int(y1)+center,int(x1)-center:int(x1)+center]=hm# y1 x1
+            annotated_dot[int(y2)-center:int(y2)+center,int(x2)-center:int(x2)+center]=hm# y1 x1
 
             img[:,:,2] = annotated_dot
 
