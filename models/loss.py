@@ -43,7 +43,7 @@ class Loss_wrapper(nn.Module):
         self.lossfun = None
         self.args = args
         if args.loss == 'crossentropy':
-            self.lossfun = nn.CrossEntropyLoss()
+            self.lossfun = nn.CrossEntropyLoss(weight=[1,2])
         elif args.loss == 'dicecrossentropy':
             self.lossfun = nn.CrossEntropyLoss()
             self.dicelossfun = DiceLoss()

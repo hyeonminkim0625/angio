@@ -93,7 +93,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target = target.astype(np.float32)
         img = img_load(image_path)
 
-        img[:,:,1] = histogram_eq(img[:,:,1])
+        #img[:,:,1] = histogram_eq(img[:,:,1])
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
             hm = gaussian_heatmap(sigma=1.6, spread=10)
