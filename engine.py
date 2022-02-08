@@ -169,6 +169,8 @@ def evaluate(model, criterion, data_loader, device, args):
                 if args.wandb:
                     bg_img = cv2.imread(args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".jpg")
 
+                    bg_img = cv2.resize(bg_img,(args.img_size,args.img_size))
+
                     pred_mask = np.load(pred_file_name.replace('png','npy'))
                     target_mask = np.load(target_file_name.replace('png','npy'))
                     pred_mask = np.argmax(pred_mask,axis=0)
