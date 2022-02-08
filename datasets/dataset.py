@@ -96,11 +96,11 @@ class Angio_Dataset(torch.utils.data.Dataset):
             x1, y1, x2, y2 = self.image_path[index][2]
             hm = gaussian_heatmap(sigma=1.6, spread=10)
             center = 8
-            annotated_dot = np.zeros((512,512))
-            annotated_dot[int(y1)-center:int(y1)+center,int(x1)-center:int(x1)+center]=hm# y1 x1
-            annotated_dot[int(y2)-center:int(y2)+center,int(x2)-center:int(x2)+center]=hm# y1 x1
+            annotated_dot = np.zeros((512+center*2,512+center*2))
+            annotated_dot[center+int(y1)-center:center+int(y1)+center,center+int(x1)-center:center+int(x1)+center]=hm# y1 x1
+            annotated_dot[center+int(y2)-center:center+int(y2)+center,center+int(x2)-center:center+int(x2)+center]=hm# y1 x1
 
-            img[:,:,2] = annotated_dot
+            img[:,:,2] = annotated_dot[center:512+center,center:512+center]
 
         elif self.args.withcoordinate=='add':
             x1, y1, x2, y2 = self.image_path[index][2]
