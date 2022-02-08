@@ -58,7 +58,6 @@ def evaluate(model, criterion, data_loader, device, args):
 
     path_iou_array=[]
     
-
     for samples, targets,paths in tqdm(data_loader):
         samples = samples.to(device)
         targets = targets.to(device)

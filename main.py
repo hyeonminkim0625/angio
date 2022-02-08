@@ -33,7 +33,6 @@ def get_args_parser():
     parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--multigpu', action='store_true')
     parser.add_argument('--rank', default="1", type=str)
-    parser.add_argument('--frame', default=0, type=int)
     parser.add_argument('--loss', default="crossentropy", type=str)
     parser.add_argument('--opt', default="rll", type=str)
     parser.add_argument('--img_size', default=512, type=int)
@@ -74,7 +73,7 @@ def train(args):
         exit()
 
     criterion = None
-    if args.loss == 'crossentropy':
+    if args.loss == 'crossentropy' or args.loss == 'dicecrossentropy':
         criterion = Loss_wrapper(args)
     elif args.loss == 'focal' or args.loss == 'dicefocal':
         criterion = Binary_Loss_wrapper(args)

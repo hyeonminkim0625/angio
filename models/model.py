@@ -33,8 +33,6 @@ class BaseLine_wrapper(nn.Module):
         self._model = args.model
         _num_classes = args.num_classes
         channel = 3
-        if args.frame!=0:
-            channel = args.frame*2 + 1
         _num_classes = args.num_classes
         if self._model == "deeplab":
             self.model = torchvision.models.segmentation.deeplabv3_resnet50(pretrained=False,num_classes=_num_classes)

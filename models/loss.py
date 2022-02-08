@@ -41,11 +41,16 @@ class Loss_wrapper(nn.Module):
     def __init__(self,args):
         super(Loss_wrapper, self).__init__()
         self.loss = None
+        self.args = args
         if args.loss == 'crossentropy':
             self.lossfun = nn.CrossEntropyLoss()
+        elif args.loss == 'dicecrossentropy':
+            self.dicelossfun = DiceLoss()
 
     def forward(self, pred, target):
         loss = self.lossfun(pred,target)
+        if self.args.loss == 'dicecrossentropy':
+            loss+=self.dicelossfun(pred,target)
         return loss
 
 class Binary_Loss_wrapper(nn.Module):
