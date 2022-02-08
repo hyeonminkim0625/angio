@@ -42,8 +42,10 @@ class Loss_wrapper(nn.Module):
         super(Loss_wrapper, self).__init__()
         self.lossfun = None
         self.args = args
+        weight = torch.ones((2),device='cuda')
+        weight[1]*=2
         if args.loss == 'crossentropy':
-            self.lossfun = nn.CrossEntropyLoss(weight=[1,2])
+            self.lossfun = nn.CrossEntropyLoss(weight=weight)
         elif args.loss == 'dicecrossentropy':
             self.lossfun = nn.CrossEntropyLoss()
             self.dicelossfun = DiceLoss()
