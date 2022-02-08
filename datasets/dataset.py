@@ -14,6 +14,7 @@ import csv
 import pdb
 import pandas as pd
 from tqdm import tqdm
+from utils import histogram_eq
 
 def gaussian_heatmap(sigma: int, spread: int):
     extent = int(spread * sigma)
@@ -71,8 +72,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
             self.transform = make_transform(args)
         else:
             self.transform = make_transform_val(args)
-        self.resnet_mean = [0.485, 0.456, 0.0]
-        self.resnet_std = [0.229, 0.224, 1.0]
+        self.resnet_mean = [0.485, 0, 0.0]
+        self.resnet_std = [0.229, 1.0, 1.0]
         
     def __getitem__(self, index):
 
@@ -92,6 +93,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target = target.astype(np.float32)
         img = img_load(image_path)
 
+        img[:,:,1] = histogram_eq(img[:,:,1])
         if self.args.withcoordinate=='concat':
             x1, y1, x2, y2 = self.image_path[index][2]
             hm = gaussian_heatmap(sigma=1.6, spread=10)
@@ -135,7 +137,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
 def make_transform(args):
     transform = A.Compose([
     A.Resize(width=args.img_size, height=args.img_size),
-    #A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
+    A.RandomResizedCrop(width=args.img_size, height=args.img_size, scale=(0.8,1.0),p=0.5),
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
     #A.RandomBrightnessContrast(brightness_limit=0.1,contrast_limit=0.1,p=0.5),#option1
