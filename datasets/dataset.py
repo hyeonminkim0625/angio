@@ -89,8 +89,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
             annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)
 
-            img[:,:,2] = annotated_dot*10
-            
+            img[:,:,2] = annotated_dot
+
         elif self.args.withcoordinate=='add':
             x1, y1, x2, y2 = self.image_path[index][2]
             img = cv2.circle(img,(int(x1),int(y1)),5,(255,255,255),thickness=-1)
