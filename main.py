@@ -176,7 +176,6 @@ if __name__ == '__main__':
 
     if args.wandb:
         wandb.init(project='angio',entity="medi-whale")
-        print(wandb.config)
     if args.output_dir:
         if args.eval:
             Path(args.output_dir+'_'+args.model+'_'+args.mode).mkdir(parents=True, exist_ok=True)
@@ -203,7 +202,7 @@ if __name__ == '__main__':
         wandb.config['saveallfig']=False
         wandb.config['onlymask']=False
         wandb.config['report_hard_sample']=0
-        wandb.config['report_hard_sample']=True
+        wandb.config['wandb']=True
 
         print(wandb.config)
         train(wandb.config)
