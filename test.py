@@ -20,7 +20,7 @@ def gaussian_heatmap(sigma: int, spread: int):
 def gaussian_heatmap_re(heatmap,x,y):
     for i_ in range(512):
         for j_ in range(512):
-            heatmap[i_, j_] += ((x-i_)**2 + (y-j_)**2)**0.2
+            heatmap[i_, j_] += ((y-i_)**2 + (x-j_)**2)**0.2
     return heatmap
 
 annotated_dot = np.zeros((512,512))

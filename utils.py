@@ -20,3 +20,4 @@ def histogram_eq(img):
     img2 = cdf[img]
 
     return img2
+

@@ -7,6 +7,7 @@ import torchvision.transforms.functional as TF
 from models.convlstm import ConvLSTM
 from models.unet_plusplus import Nested_UNet
 from models.deeplabv3plus.deeplab import DeepLab
+from crfseg import CRF
 """
 https://github.com/niecongchong/HRNet-keras-semantic-segmentation/blob/master/model/seg_hrnet.py
 """
@@ -31,6 +32,7 @@ class BaseLine_wrapper(nn.Module):
         super(BaseLine_wrapper, self).__init__()
         self.model = None
         self._model = args.model
+        self.args = args
         _num_classes = args.num_classes
         channel = 3
         _num_classes = args.num_classes
@@ -44,9 +46,13 @@ class BaseLine_wrapper(nn.Module):
             self.model = Nested_UNet(_num_classes,3,deep_supervision=True)
         elif args.model == 'deeplabv3plus':
             self.model = DeepLab(backbone='xception', output_stride=8, num_classes=_num_classes,sync_bn=False, freeze_bn=False)
-
+        if self.args.crf:
+            self.crf = CRF(n_spatial_dims=2)
     def forward(self, x):
         x = self.model(x)['out']
+
+        if self.args.crf:
+            x = self.crf(x)
         return x
 
 class LSTM_wrapper(nn.Module):

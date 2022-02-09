@@ -13,7 +13,7 @@ import cv2
 import pdb
 import pandas as pd
 import pickle
-from metric import averaged_hausdorff_distance as ahd, calculate_iou, calculate_overlab_contour
+from metric import averaged_hausdorff_distance as ahd, calculate_iou, calculate_overlab_contour, compute_mean_iou
 from scipy.spatial.distance import directed_hausdorff
 import torch.nn.functional as F
 
@@ -69,9 +69,6 @@ def evaluate(model, criterion, data_loader, device, args):
         num_classes = outputs.shape[1]
 
         #calculate by batch
-
-        if args.crf:
-            outputs = torch.softmax(outputs,dim=1)
         for j in range(samples.shape[0]):
 
             """
@@ -89,11 +86,10 @@ def evaluate(model, criterion, data_loader, device, args):
             else:
                 pass
 
+            #class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
 
-            class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
-
-            info_dictionary["class1_iou"]=float(class1_iou[0])
-
+            #info_dictionary["class1_iou"]=float(class1_iou[0])
+            info_dictionary["class1_iou"] = compute_mean_iou(output_mask.cpu().numpy(),target_mask.cpu().numpy())
             path_iou_array.append(
                 info_dictionary
             )
