@@ -8,11 +8,11 @@ command:
 
 method: bayes
 metric:
-  name: class1_iou
+  name: class1 iou
   goal: maximize
 parameters:
   lr:
-    values: [2e-4,4e-4]
+    values: [2e-4]
   batch_size:
     values: [32]
   weight_decay:
