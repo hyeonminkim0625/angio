@@ -89,7 +89,7 @@ def evaluate(model, criterion, data_loader, device, args):
             #class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
 
             #info_dictionary["class1_iou"]=float(class1_iou[0])
-            info_dictionary["class1_iou"] = compute_mean_iou(output_mask.cpu().numpy(),target_mask.cpu().numpy())
+            info_dictionary["class1_iou"] = compute_mean_iou(output_mask.cpu().numpy().flatten(),target_mask.cpu().numpy().flatten())
             path_iou_array.append(
                 info_dictionary
             )
