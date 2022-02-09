@@ -25,7 +25,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
     #train
     parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--batch_size', default=2, type=int )
+    parser.add_argument('--batch_size', default=32, type=int )
     parser.add_argument('--weight_decay', default=1e-2, type=float)
     parser.add_argument('--epochs', default=300, type=int)
     parser.add_argument('--lr_drop', default=200, type=int)
@@ -45,7 +45,7 @@ def get_args_parser():
     parser.add_argument('--valperepoch', default=1, type=int)
 
     #model config
-    parser.add_argument('--model',default="deeplab",type=str)
+    parser.add_argument('--model',default="unet",type=str)
 
     #dataset
     parser.add_argument('--path',default="",type=str)
@@ -105,7 +105,7 @@ def train(args):
     model.to(device)
     criterion.to(device)
 
-
+    print('ppppp')
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
     train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=False)
 
