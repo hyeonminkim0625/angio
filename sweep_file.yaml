@@ -21,17 +21,21 @@ parameters:
     values: [50]
   lr_drop:
     values: [40]
+  loss:
+    values: ['crossentropy','dicecrossentropy']
   opt:
     values: ['rll','adamw']
+  img_size:
+    values: [128,256]
   withcoordinate:
     values: ['concat_filter','concat_point','concat_heatmap','add']
   classweight:
     values: [1.0,2.0]
+  histogram_eq:
+    values: [1, 0]
   sigma:
     values: [0.2,0.3]
+  valperepoch:
+    values: [2]
   model:
     values: ['unet']
-  loss:
-    values: ['crossentropy','dicecrossentropy']
-  img_size:
-    values: [128,256]

@@ -29,7 +29,6 @@ def get_args_parser():
     parser.add_argument('--weight_decay', default=1e-2, type=float)
     parser.add_argument('--epochs', default=300, type=int)
     parser.add_argument('--lr_drop', default=200, type=int)
-    parser.add_argument('--clip_max_norm', default=0.1, type=float, help='gradient clipping max norm')
     parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--multigpu', action='store_true')
     parser.add_argument('--rank', default="1", type=str)
@@ -38,29 +37,23 @@ def get_args_parser():
     parser.add_argument('--img_size', default=512, type=int)
     parser.add_argument('--withcoordinate', default='concat', type=str)
     parser.add_argument('--classweight', default=1.0, type=float)
-    parser.add_argument('--histogram_eq', action='store_true')
-
-
+    parser.add_argument('--histogram_eq', default=False,type=bool)
     parser.add_argument('--sigma', default=0.3, type=float)
     parser.add_argument('--valperepoch', default=2, type=int)
-
-    #model config
     parser.add_argument('--model',default="unet",type=str)
-
-    #dataset
-    parser.add_argument('--path',default="",type=str)
     parser.add_argument('--num_classes',default=2, type=int)
-    parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
     parser.add_argument('--weight_dir', default='./weight', help='path where to save, empty for no saving')
-    parser.add_argument('--saveallfig', action='store_true')
-    parser.add_argument('--onlymask', action='store_true')
-    parser.add_argument('--report_hard_sample', default=0, type=int)
+    
     
     #eval
+    parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
     parser.add_argument('--mode',default='train',type=str)
     parser.add_argument('--mask_argmax', action='store_true')
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--weight_path',default="/",type=str)
+    parser.add_argument('--saveallfig', action='store_true')
+    parser.add_argument('--onlymask', action='store_true')
+    parser.add_argument('--report_hard_sample', default=0, type=int)
 
     return parser
 
@@ -105,7 +98,7 @@ def train(args):
     model.to(device)
     criterion.to(device)
 
-    print('ppppp')
+    
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
     train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=False)
 
@@ -113,7 +106,7 @@ def train(args):
     val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=False)
 
     for i in range(args.epochs):
-        print('ppppp')
+        
         train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
 
         if (i+1)%args.valperepoch==0:
@@ -186,18 +179,28 @@ if __name__ == '__main__':
             Path(args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample').mkdir(parents=True, exist_ok=True)
         else:
             for i in range(100):
+                args.model =  wandb.config.model
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
+                    wandb.config.weight_dir  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
 
     if args.wandb:
         wandb.init(project='angio',entity="medi-whale")
-        wandb.config.update(args)
+        wandb.config.num_classes=2
+        wandb.config.mode = 'train'
+        wandb.config.mask_argmax = True
+        wandb.config.eval = False
+        wandb.config.saveallfig = False
+        wandb.config.onlymask = False
+        wandb.config.report_hard_sample = 0
+        wandb.config.output_dir = False
+        wandb.config.weight_path = False
     if args.eval:
         eval(args)
     else:
-        train(args)
+        train(wandb.config)
 
 """
 보류
