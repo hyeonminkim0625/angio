@@ -173,7 +173,7 @@ if __name__ == '__main__':
     #torch.backends.cudnn.deterministic = True
     #torch.backends.cudnn.benchmark = False
 
-    print(wandb.config)
+    print(wandb.config.keys())
     if args.output_dir:
         if args.eval:
             Path(args.output_dir+'_'+args.model+'_'+args.mode).mkdir(parents=True, exist_ok=True)
