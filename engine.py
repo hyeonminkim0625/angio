@@ -39,8 +39,6 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         optimizer.zero_grad()
         loss.backward()
 
-        if args.clip_max_norm > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_max_norm)
         optimizer.step()
     
     total_loss = total_loss/(batch_num*args.batch_size)
