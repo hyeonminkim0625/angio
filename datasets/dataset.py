@@ -139,7 +139,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
             annotated_dot = cv2.circle(annotated_dot,(int(x1),int(y1)),5,(255,255,255),thickness=-1)
             annotated_dot = cv2.circle(annotated_dot,(int(x2),int(y2)),5,(255,255,255),thickness=-1)
 
-            img[:,:,2] = annotated_dot
+            img[:,:,2] = annotated_dot[:,:,0]
         
         if self.args.withcoordinate=='concat_heatmap':
             annotated_dot = np.load("/data/angiosegmentation/heatmap/"+self.image_path[index][3]+'_'+str(self.args.sigma)+'.npy')
