@@ -202,7 +202,9 @@ if __name__ == '__main__':
         wandb.config['saveallfig']=False
         wandb.config['onlymask']=False
         wandb.config['report_hard_sample']=0
-        train(args)
+
+        print(wandb.config)
+        train(wandb.config)
 
 """
 보류
