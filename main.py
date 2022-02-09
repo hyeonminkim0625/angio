@@ -175,7 +175,7 @@ if __name__ == '__main__':
    
 
     if args.wandb:
-        #wandb.init(project='angio',entity="medi-whale")
+        wandb.init(project='angio',entity="medi-whale")
         print(wandb.config)
     if args.output_dir:
         if args.eval:
