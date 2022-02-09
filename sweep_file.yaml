@@ -34,7 +34,7 @@ parameters:
   histogram_eq:
     values: [1, 0]
   sigma:
-    values: [0.2,0.3]
+    values: [0.3]
   valperepoch:
     values: [2]
   model:
