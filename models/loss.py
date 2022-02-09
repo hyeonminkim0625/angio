@@ -47,7 +47,7 @@ class Loss_wrapper(nn.Module):
         if args.loss == 'crossentropy':
             self.lossfun = nn.CrossEntropyLoss(weight=weight)
         elif args.loss == 'dicecrossentropy':
-            self.lossfun = nn.CrossEntropyLoss()
+            self.lossfun = nn.CrossEntropyLoss(weight=weight)
             self.dicelossfun = DiceLoss()
 
     def forward(self, pred, target):

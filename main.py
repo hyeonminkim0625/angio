@@ -42,7 +42,7 @@ def get_args_parser():
 
 
     parser.add_argument('--sigma', default=0.3, type=float)
-    parser.add_argument('--valperepoch', default=1, type=int)
+    parser.add_argument('--valperepoch', default=2, type=int)
 
     #model config
     parser.add_argument('--model',default="unet",type=str)
@@ -113,6 +113,7 @@ def train(args):
     val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=False)
 
     for i in range(args.epochs):
+        print('ppppp')
         train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
 
         if (i+1)%args.valperepoch==0:

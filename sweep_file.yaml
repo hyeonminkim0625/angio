@@ -1,10 +1,37 @@
 program: main.py
-method: random
+command:
+- python
+- ${program}
+- --wandb
+- --multigpu
+- --mask_argmax
+
+method: bayes
 metric:
   name: class1_iou
   goal: maximize
 parameters:
   lr:
-    values: [2e-3,3e-3]
+    values: [2e-4,4e-4]
+  batch_size:
+    values: [32]
+  weight_decay:
+    values: [1e-2,1e-4]
+  epochs:
+    values: [50]
+  lr_drop:
+    values: [40]
+  opt:
+    values: ['rll','adamw']
+  withcoordinate:
+    values: ['concat_filter','concat_point','concat_heatmap','add']
+  classweight:
+    values: [1.0,2.0]
+  sigma:
+    values: [0.2,0.3]
+  model:
+    values: ['unet']
+  loss:
+    values: ['crossentropy','dicecrossentropy']
   img_size:
     values: [128,256]

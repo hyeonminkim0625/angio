@@ -42,7 +42,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
             Path('/data/angiosegmentation/heatmap/').mkdir(parents=True, exist_ok=True)
 
         if mode == "train":
-            for i in self.angio_list.iterrows():
+            for i in tqdm(self.angio_list.iterrows()):
                 if i[1]['train']==1:
                     if i[1]['origin'].split('-')[1].split('.')[0] not in not_use:
                         temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'],
@@ -66,7 +66,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
             print('train ',len(self.image_path))
 
         elif mode == "val":
-            for i in self.angio_list.iterrows():
+            for i in tqdm(self.angio_list.iterrows()):
                 if i[1]['train']==0:
                     if i[1]['origin'].split('-')[1].split('.')[0] not in not_use:
                         temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'],
