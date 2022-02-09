@@ -175,7 +175,7 @@ if __name__ == '__main__':
    
 
     if args.wandb:
-        wandb.init(project='angio',entity="medi-whale")
+        #wandb.init(project='angio',entity="medi-whale")
         print(wandb.config)
     if args.output_dir:
         if args.eval:
@@ -193,6 +193,7 @@ if __name__ == '__main__':
     if args.eval:
         eval(args)
     else:
+        wandb.config['multigpu']=True
         wandb.config['num_classes']=2
         wandb.config['output_dir']='.'
         wandb.config['mode']='train'
