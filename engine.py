@@ -88,7 +88,8 @@ def evaluate(model, criterion, data_loader, device, args):
 
             class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
 
-            info_dictionary["class1_iou"]=(float(class1_iou[0])+float(class1_iou[1]))/2.0
+            info_dictionary["class1_iou"]=float(class1_iou[1])
+            info_dictionary["class2_iou"]=float(class1_iou[0])
             #info_dictionary["class1_iou"] = compute_mean_iou(output_mask.cpu().numpy().flatten(),target_mask.cpu().numpy().flatten())
             path_iou_array.append(
                 info_dictionary
@@ -139,7 +140,6 @@ def evaluate(model, criterion, data_loader, device, args):
                 """
 
                 copyfile(data_path,"./"+args.output_dir+'_'+args.model+'_'+args.mode+'/'+paths[j]+'.jpg')
-
 
                 np.save(pred_file_name.replace('png','npy'),output_mask)
                 np.save(target_file_name.replace('png','npy'),target_mask)
