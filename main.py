@@ -65,6 +65,7 @@ def get_args_parser():
     return parser
 
 def train(args):
+    print(args)
     
     model = None
 
