@@ -38,7 +38,11 @@ def get_args_parser():
     parser.add_argument('--img_size', default=512, type=int)
     parser.add_argument('--withcoordinate', default='concat', type=str)
     parser.add_argument('--classweight', default=1.0, type=float)
+    parser.add_argument('--histogram_eq', action='store_true')
 
+
+    parser.add_argument('--sigma', default=0.3, type=float)
+    parser.add_argument('--valperepoch', default=1, type=int)
 
     #model config
     parser.add_argument('--model',default="deeplab",type=str)
@@ -54,9 +58,7 @@ def get_args_parser():
     
     #eval
     parser.add_argument('--mode',default='train',type=str)
-    parser.add_argument('--crf', action='store_true')
     parser.add_argument('--mask_argmax', action='store_true')
-    parser.add_argument('--hausdorff_distance', action='store_true')
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--weight_path',default="/",type=str)
 
@@ -102,6 +104,9 @@ def train(args):
     model.to(device)
     criterion.to(device)
 
+    if args.wandb:
+        wandb.watch(model, criterion, log="all", log_freq=10)
+
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
     train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=False)
 
@@ -110,18 +115,19 @@ def train(args):
 
     for i in range(args.epochs):
         train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
-        evaluate(model, criterion, val_dataloader ,device , args)
-        
-        weight_dict = {
-            'epoch': i,
-            'model_state_dict': model.module.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler' : scheduler.state_dict()}
-        
-        if base_opt is not None:
-            weight_dict['base_optimizer_state_dict'] = base_opt.state_dict()
-        torch.save(weight_dict,
-            args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
+
+        if (i+1)%args.valperepoch==0:
+            evaluate(model, criterion, val_dataloader ,device , args)
+            weight_dict = {
+                'epoch': i,
+                'model_state_dict': model.module.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler' : scheduler.state_dict()}
+            
+            if base_opt is not None:
+                weight_dict['base_optimizer_state_dict'] = base_opt.state_dict()
+            torch.save(weight_dict,
+                args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
             
         scheduler.step()
 
@@ -153,7 +159,7 @@ def eval(args):
     criterion.to(device)
 
     val_dataset = Angio_Dataset(args.num_classes,mode = args.mode,args=args)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,drop_last=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,drop_last=False)
 
     if args.weight_path is not "/":
         checkpoint = torch.load(args.weight_path)

@@ -1,0 +1,10 @@
+program: main.py
+method: random
+metric:
+  name: class1_iou
+  goal: maximize
+parameters:
+  lr:
+    values: [2e-3,3e-3]
+  img_size:
+    values: [128,256]

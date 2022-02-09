@@ -15,22 +15,12 @@ import pdb
 import pandas as pd
 from tqdm import tqdm
 from utils import histogram_eq
+from pathlib import Path
 
-def gaussian_heatmap(sigma: int, spread: int):
-    extent = int(spread * sigma)
-    center = spread * sigma / 2
-    heatmap = np.zeros([extent, extent], dtype=np.float32)
-    for i_ in range(extent):
-        for j_ in range(extent):
-            heatmap[i_, j_] = 1 / 2 / np.pi / (sigma ** 2) * np.exp(
-                -1 / 2 * ((i_ - center - 0.5) ** 2 + (j_ - center - 0.5) ** 2) / (sigma ** 2))
-    heatmap = (heatmap / np.max(heatmap) * 255).astype(np.uint8)
-    return heatmap
-
-def gaussian_heatmap_re(heatmap,x,y):
+def gaussian_heatmap_re(heatmap,x,y,sigma):
     for i_ in range(512):
         for j_ in range(512):
-            heatmap[i_, j_] += ((y-i_)**2 + (x-j_)**2)**0.2
+            heatmap[i_, j_] += ((y-i_)**2 + (x-j_)**2)**sigma
     return heatmap
 
 class Angio_Dataset(torch.utils.data.Dataset):
@@ -46,13 +36,29 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         not_use = [1336,275,228,248,712,631,268,4,180,1364]
         not_use = [str(p) for p in not_use]
-         
+        
         img_list = []
+        if not os.path.exists("/data/angiosegmentation/heatmap/"):
+            Path('/data/angiosegmentation/heatmap/').mkdir(parents=True, exist_ok=True)
+
         if mode == "train":
             for i in self.angio_list.iterrows():
                 if i[1]['train']==1:
                     if i[1]['origin'].split('-')[1].split('.')[0] not in not_use:
-                        temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'], '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],(i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2'])]
+                        temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'],
+                        '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],
+                        (i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2']),
+                        i[1]['origin'].split('-')[1].split('.')[0]]
+                        if not os.path.exists("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy'):
+                            x1, y1, x2, y2 = temp[2]
+                            annotated_dot = np.zeros((512,512))
+
+                            annotated_dot = gaussian_heatmap_re(annotated_dot,x1,y1,self.args.sigma)
+                            annotated_dot = gaussian_heatmap_re(annotated_dot,x2,y2,self.args.sigma)
+                            annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
+                            annotated_dot = 255-annotated_dot
+                            np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
+
                         img_list.append(temp)
                   
             self.image_path = img_list
@@ -63,7 +69,19 @@ class Angio_Dataset(torch.utils.data.Dataset):
             for i in self.angio_list.iterrows():
                 if i[1]['train']==0:
                     if i[1]['origin'].split('-')[1].split('.')[0] not in not_use:
-                        temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'], '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],(i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2'])]
+                        temp = ['/data/angiosegmentation/raw_img/'+i[1]['origin'],
+                        '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],
+                        (i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2']),
+                        i[1]['origin'].split('-')[1].split('.')[0]]
+                        if not os.path.exists("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy'):
+                            x1, y1, x2, y2 = temp[2]
+                            annotated_dot = np.zeros((512,512))
+
+                            annotated_dot = gaussian_heatmap_re(annotated_dot,x1,y1,self.args.sigma)
+                            annotated_dot = gaussian_heatmap_re(annotated_dot,x2,y2,self.args.sigma)
+                            annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
+                            annotated_dot = 255-annotated_dot
+                            np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
                         img_list.append(temp)                
                   
             self.image_path = img_list
@@ -78,8 +96,13 @@ class Angio_Dataset(torch.utils.data.Dataset):
             self.transform = make_transform(args)
         else:
             self.transform = make_transform_val(args)
-        self.resnet_mean = [0.485, 0, 0.0]
-        self.resnet_std = [0.229, 1.0, 1.0]
+        
+        if self.args.histogram_eq:
+            self.resnet_mean = [0.485, 0.0, 0.0]
+            self.resnet_std = [0.229, 1.0, 1.0]
+        else:
+            self.resnet_mean = [0.485, 0.456, 0.0]
+            self.resnet_std = [0.229, 0.224, 1.0]
         
     def __getitem__(self, index):
 
@@ -99,17 +122,29 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target = target.astype(np.float32)
         img = img_load(image_path)
 
-        #img[:,:,1] = histogram_eq(img[:,:,1])
-        if self.args.withcoordinate=='concat':
+        if self.args.histogram_eq:
+            img[:,:,1] = histogram_eq(img[:,:,1])
+
+        if self.args.withcoordinate=='concat_filter':
             x1, y1, x2, y2 = self.image_path[index][2]
             annotated_dot = np.zeros((512,512))
-
-            annotated_dot = gaussian_heatmap_re(annotated_dot,x1,y1)
-            annotated_dot = gaussian_heatmap_re(annotated_dot,x2,y2)
-            annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
-            annotated_dot = 255-annotated_dot
+            annotated_dot[int(y1),int(x1)]=255# y1 x1
+            annotated_dot[int(y2),int(x2)]=255
+            annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
+            img[:,:,2] = annotated_dot
+        
+        if self.args.withcoordinate=='concat_point':
+            x1, y1, x2, y2 = self.image_path[index][2]
+            annotated_dot = np.zeros((512,512,3))
+            annotated_dot = cv2.circle(annotated_dot,(int(x1),int(y1)),5,(255,255,255),thickness=-1)
+            annotated_dot = cv2.circle(annotated_dot,(int(x2),int(y2)),5,(255,255,255),thickness=-1)
 
             img[:,:,2] = annotated_dot
+        
+        if self.args.withcoordinate=='concat_heatmap':
+            annotated_dot = np.load("/data/angiosegmentation/heatmap/"+self.image_path[index][3]+'_'+str(self.args.sigma)+'.npy')
+            img[:,:,2] = annotated_dot
+
 
         elif self.args.withcoordinate=='add':
             x1, y1, x2, y2 = self.image_path[index][2]
@@ -128,9 +163,6 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         else:
             transformed = self.transform(image=img, mask=target)
-            
-            np.where(transformed['mask']==1)
-
             target = TF.to_tensor(transformed['mask'])
             img = TF.to_tensor(transformed['image'])
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
