@@ -109,8 +109,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
             #annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
             #annotated_dot = 255-annotated_dot
             annotated_dot = np.zeros((512,512))
-            annotated_dot[int(y1),int(x1)]=1000# y1 x1
-            annotated_dot[int(y2),int(x2)]=1000
+            annotated_dot[int(x1),int(y1)]=255# y1 x1
+            annotated_dot[int(x2),int(y2)]=255
 
             annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*30
 
