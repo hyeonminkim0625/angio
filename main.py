@@ -175,7 +175,7 @@ if __name__ == '__main__':
    
 
     if args.wandb:
-        wandb.init(project='angio',entity="medi-whale")
+        wandb.init(project='angio')#entity="medi-whale"
     if args.output_dir:
         if args.eval:
             Path(args.output_dir+'_'+args.model+'_'+args.mode).mkdir(parents=True, exist_ok=True)
