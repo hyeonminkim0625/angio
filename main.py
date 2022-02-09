@@ -179,10 +179,10 @@ if __name__ == '__main__':
             Path(args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample').mkdir(parents=True, exist_ok=True)
         else:
             for i in range(100):
-                args.model =  wandb.config.model
+                args.model =  wandb.config['model']
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
-                    wandb.config.weight_dir  = args.weight_dir
+                    wandb.config['weight_dir']  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
 
