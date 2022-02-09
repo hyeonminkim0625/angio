@@ -192,7 +192,7 @@ if __name__ == '__main__':
                     break
 
     if args.wandb:
-        wandb.init(project='angio_'+args.model+'_'+args.mode,entity="medi-whale")
+        wandb.init(project='angio',entity="medi-whale")
         wandb.config.update(args)
     if args.eval:
         eval(args)
