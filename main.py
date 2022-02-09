@@ -172,8 +172,11 @@ if __name__ == '__main__':
         torch.cuda.manual_seed_all(random_seed)
     #torch.backends.cudnn.deterministic = True
     #torch.backends.cudnn.benchmark = False
+   
 
-    print(wandb.config())
+    if args.wandb:
+        wandb.init(project='angio',entity="medi-whale")
+        print(wandb.config)
     if args.output_dir:
         if args.eval:
             Path(args.output_dir+'_'+args.model+'_'+args.mode).mkdir(parents=True, exist_ok=True)
@@ -186,10 +189,6 @@ if __name__ == '__main__':
                     wandb.config.weight_dir  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
-
-    if args.wandb:
-        wandb.init(project='angio',entity="medi-whale")
-        wandb.config.update(args)
 
     if args.eval:
         eval(args)
