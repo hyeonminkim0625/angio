@@ -86,10 +86,10 @@ def evaluate(model, criterion, data_loader, device, args):
             else:
                 pass
 
-            class1_iou = calculate_iou(output_mask,target_mask,args.num_classes)
+            iou = calculate_iou(output_mask,target_mask,args.num_classes)
 
-            info_dictionary["class1_iou"]=float(class1_iou[1])
-            info_dictionary["class2_iou"]=float(class1_iou[0])
+            info_dictionary["class1_iou"]=float(iou[1])
+            info_dictionary["class0_iou"]=float(iou[0])
             #info_dictionary["class1_iou"] = compute_mean_iou(output_mask.cpu().numpy().flatten(),target_mask.cpu().numpy().flatten())
             path_iou_array.append(
                 info_dictionary
@@ -187,18 +187,11 @@ def evaluate(model, criterion, data_loader, device, args):
     if args.wandb:
         wandb_dict = {"eval "+str(args.mode)+" average losses" : total_loss}
 
-        for i in range(1,num_classes):
+        for i in range(0,num_classes):
             temp = np.array([p['class'+str(i)+'_iou'] for p in path_iou_array])
             wandb_dict["class"+str(i)+" iou"] = np.mean(temp)*100
-        if args.hausdorff_distance:
-            for i in range(1,num_classes):
-                temp = np.array([p['class'+str(i)+'_hausdorff_distance'] for p in path_iou_array])
-                wandb_dict["class"+str(i)+" hausdorff_distance"] = np.mean(temp)
         
-        wandb_dict["total iou"] = wandb_dict['class1 iou']
-
-        if args.hausdorff_distance:
-            wandb_dict["total hausdorff_distance"] = (wandb_dict['class1 hausdorff_distance']+wandb_dict['class2 hausdorff_distance'])/2.0
+        wandb_dict["total iou"] = (wandb_dict['class0 iou'] + wandb_dict['class1 iou'])/2.0
 
         wandb.log(wandb_dict)
     if args.eval:
