@@ -44,7 +44,7 @@ def calculate_iou(pred,target,num_classes):
     #pred_mask = np.argmax(pred,axis=0)
     #target_mask = np.argmax(target,axis=0)
     iou_list = []
-    for i in range(1,num_classes):
+    for i in range(0,num_classes):
         iou_score = (torch.sum((pred[i]==True)&(target[i]==True))+ 1e-6) /(torch.sum((pred[i]==True)|(target[i]==True))+ 1e-6)
         iou_list.append(iou_score)
     
@@ -54,7 +54,7 @@ def calculate_iou(pred,target,num_classes):
 
 """
 def compute_mean_iou(pred, label):
-    
+
     unique_labels = np.unique(label)
     num_unique_labels = len(unique_labels);
 
