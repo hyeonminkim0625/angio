@@ -179,28 +179,20 @@ if __name__ == '__main__':
             Path(args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample').mkdir(parents=True, exist_ok=True)
         else:
             for i in range(100):
-                args.model =  wandb.config['model']
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
-                    wandb.config['weight_dir']  = args.weight_dir
+                    wandb.config.weight_dir  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
 
     if args.wandb:
         wandb.init(project='angio',entity="medi-whale")
-        wandb.config.num_classes=2
-        wandb.config.mode = 'train'
-        wandb.config.mask_argmax = True
-        wandb.config.eval = False
-        wandb.config.saveallfig = False
-        wandb.config.onlymask = False
-        wandb.config.report_hard_sample = 0
-        wandb.config.output_dir = False
-        wandb.config.weight_path = False
+        wandb.config.update(args)
+
     if args.eval:
         eval(args)
     else:
-        train(wandb.config)
+        train(args)
 
 """
 보류
