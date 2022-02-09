@@ -104,10 +104,15 @@ class Angio_Dataset(torch.utils.data.Dataset):
             x1, y1, x2, y2 = self.image_path[index][2]
             annotated_dot = np.zeros((512,512))
 
-            annotated_dot = gaussian_heatmap_re(annotated_dot,x1,y1)
-            annotated_dot = gaussian_heatmap_re(annotated_dot,x2,y2)
-            annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
-            annotated_dot = 255-annotated_dot
+            #annotated_dot = gaussian_heatmap_re(annotated_dot,x1,y1)
+            #annotated_dot = gaussian_heatmap_re(annotated_dot,x2,y2)
+            #annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
+            #annotated_dot = 255-annotated_dot
+            annotated_dot = np.zeros((512,512))
+            annotated_dot[int(y1),int(x1)]=255# y1 x1
+            annotated_dot[int(y2),int(x2)]=255
+
+            annotated_dot = cv2.GaussianBlur(annotated_dot,(15,15),0)*10
 
             img[:,:,2] = annotated_dot
 
