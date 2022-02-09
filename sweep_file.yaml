@@ -5,7 +5,6 @@ command:
 - --wandb
 - --multigpu
 - --mask_argmax
-- --lr= ${parameters.lr}
 
 method: bayes
 metric:
