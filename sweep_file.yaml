@@ -24,18 +24,18 @@ parameters:
   loss:
     values: ['crossentropy','dicecrossentropy']
   opt:
-    values: ['rll','adamw']
+    values: ['adamw']
   img_size:
-    values: [128,256]
+    values: [256,512]
   withcoordinate:
-    values: ['concat_filter','concat_point','concat_heatmap','add']
+    values: ['concat_heatmap']
   classweight:
     values: [1.0,2.0]
   histogram_eq:
-    values: [1, 0]
+    values:  [0]
   sigma:
     values: [0.3]
   valperepoch:
     values: [2]
   model:
-    values: ['unet']
+    values: ['deeplabv3plus']
