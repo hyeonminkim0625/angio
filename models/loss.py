@@ -51,6 +51,8 @@ class Loss_wrapper(nn.Module):
             self.dicelossfun = DiceLoss()
 
     def forward(self, pred, target):
+        if torch.__version__ != '1.10.1':
+            target = torch.argmax(target,dim=1)
         loss = self.lossfun(pred,target)
         if self.args.loss == 'dicecrossentropy':
             loss+=self.dicelossfun(pred,target)
