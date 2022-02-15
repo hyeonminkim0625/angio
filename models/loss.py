@@ -150,16 +150,19 @@ class DiceBCELoss(nn.Module):
 class DiceFocalLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(DiceFocalLoss, self).__init__()
+        self.softmax = torch.nn.LogSoftmax()
         self.focal_loss = FocalLoss_revise(logits=False)
 
     def forward(self, inputs, targets, smooth=1):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
-        inputs = F.sigmoid(inputs)       
+        BCE = self.focal_loss(inputs, targets)
+        inputs = self.softmax(inputs)
+        inputs = torch.exp(inputs)
         
         intersection = (inputs * targets).sum()                            
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
-        BCE = self.focal_loss(inputs, targets)
+        
         Dice_BCE = BCE + dice_loss
         
         return Dice_BCE
