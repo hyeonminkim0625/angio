@@ -150,7 +150,7 @@ class DiceBCELoss(nn.Module):
 class DiceFocalLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(DiceFocalLoss, self).__init__()
-        self.focal_loss = FocalLoss(logits=False)
+        self.focal_loss = FocalLoss_revise(logits=False)
 
     def forward(self, inputs, targets, smooth=1):
         

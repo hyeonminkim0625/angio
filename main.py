@@ -182,8 +182,8 @@ if __name__ == '__main__':
             Path(args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample').mkdir(parents=True, exist_ok=True)
         else:
             for i in range(100):
-                if args.wandb:
-                    args.model = wandb.config['model']
+                #if args.wandb:
+                    #args.model = wandb.config['model']
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
                     wandb.config['weight_dir']  = args.weight_dir
@@ -192,6 +192,7 @@ if __name__ == '__main__':
     if args.eval:
         eval(args)
     else:
+        """
         wandb.config['multigpu']=True
         wandb.config['num_classes']=2
         wandb.config['output_dir']='.'
@@ -203,9 +204,9 @@ if __name__ == '__main__':
         wandb.config['onlymask']=False
         wandb.config['report_hard_sample']=0
         wandb.config['wandb']=True
+        """
 
-        print(wandb.config)
-        train(wandb.config)
+        train(args)
 """
 보류
 """
