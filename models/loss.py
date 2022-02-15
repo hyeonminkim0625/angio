@@ -74,6 +74,24 @@ class Binary_Loss_wrapper(nn.Module):
             loss+=self.loss(inputs[:,i],targets[:,i])
         return loss
 
+class FocalLoss_revise(nn.Module):
+    def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
+        super(FocalLoss_revise, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.logits = logits
+        self.reduce = reduce
+        self.lossfun = nn.CrossEntropyLoss()
+
+    def forward(self, inputs, targets):
+        BCE_loss = self.lossfun(inputs, targets, reduction='none')
+        pt = torch.exp(-BCE_loss)
+        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
+        if self.reduce:
+            return torch.mean(F_loss)
+        else:
+            return F_loss
+
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
         super(FocalLoss, self).__init__()
