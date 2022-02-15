@@ -69,9 +69,8 @@ class Binary_Loss_wrapper(nn.Module):
             self.loss = DiceFocalLoss()
 
     def forward(self, inputs, targets):
-        loss = 0
-        for i in range(self.num_classes):
-            loss+=self.loss(inputs[:,i],targets[:,i])
+        
+        loss = self.loss(inputs,targets)
         return loss
 
 class FocalLoss_revise(nn.Module):
@@ -150,7 +149,7 @@ class DiceBCELoss(nn.Module):
 class DiceFocalLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(DiceFocalLoss, self).__init__()
-        self.softmax = torch.nn.LogSoftmax()
+        self.softmax = torch.nn.LogSoftmax(dim=1)
         self.focal_loss = FocalLoss_revise(logits=False)
 
     def forward(self, inputs, targets, smooth=1):
