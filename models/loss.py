@@ -156,8 +156,7 @@ class DiceFocalLoss(nn.Module):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
         BCE = self.focal_loss(inputs, targets)
-        inputs = self.softmax(inputs)
-        inputs = torch.exp(inputs)
+        inputs = torch.sigmoid(inputs)
         
         intersection = (inputs * targets).sum()                            
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
