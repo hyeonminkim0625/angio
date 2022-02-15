@@ -81,10 +81,10 @@ class FocalLoss_revise(nn.Module):
         self.gamma = gamma
         self.logits = logits
         self.reduce = reduce
-        self.lossfun = nn.CrossEntropyLoss()
+        self.lossfun = nn.CrossEntropyLoss(reduction='none')
 
     def forward(self, inputs, targets):
-        BCE_loss = self.lossfun(inputs, targets, reduction='none')
+        BCE_loss = self.lossfun(inputs, targets)
         pt = torch.exp(-BCE_loss)
         F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
         if self.reduce:
