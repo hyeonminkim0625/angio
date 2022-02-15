@@ -186,7 +186,7 @@ if __name__ == '__main__':
                     #args.model = wandb.config['model']
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
-                    wandb.config['weight_dir']  = args.weight_dir
+                    #wandb.config['weight_dir']  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
     if args.eval:
