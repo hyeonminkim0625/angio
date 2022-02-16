@@ -22,14 +22,14 @@ def centerline_loss_fn(centerlines,logit,label) :
         
         def get_mins(x,y) :
             distances = []
-            for c1,c2 in zip(torch.where(torch.any(centerlines[i]>0.5, dim=2))[0],torch.where(torch.any(centerlines[i]>0.5, dim=2))[1]) :
+            for c1,c2 in zip(torch.where(centerlines[i]>0.5)[0],torch.where(centerlines[i]>0.5)[1]) :
                 distances.append(((x-c1)**2+(y-c2)**2)**0.5)
 
             return min(distances)
         
         print(predict_index[i].shape)
-        xs = torch.where(torch.any(predict_index[i]>0.5, dim=2))[0]
-        ys = torch.where(torch.any(predict_index[i]>0.5, dim=2))[1]
+        xs = torch.where(predict_index[i]>0.5)[0]
+        ys = torch.where(predict_index[i]>0.5)[1]
         
         if len(xs) < 6000 :
             mins = list(map(lambda x,y: get_mins(x,y), xs,ys))
