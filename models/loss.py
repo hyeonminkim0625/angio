@@ -22,15 +22,14 @@ def centerline_loss_fn(centerlines,logit,label) :
 
         predict_dist = torch.stack(torch.where(predict_index[i]>0.5),dim=1).to(dtype=torch.float32)
         #len1 2
-        center_dist = torch.stack(torch.where(centerlines[i]>0.5),dim=1).to(dtype=torch.float32)
-        #len2 2
-        res = torch.cdist(predict_dist,center_dist)
-        #len1 len2
-        print(res)
-        res = torch.min(res,dim=1)[0]
-        filtered_res = res[res>12]
-        
-        if len(predict_dist) < 6000 :
+        if len(predict_dist) < 6000 and len(predict_dist)>0:
+            center_dist = torch.stack(torch.where(centerlines[i]>0.5),dim=1).to(dtype=torch.float32)
+            #len2 2
+            res = torch.cdist(predict_dist,center_dist)
+            #len1 len2
+            print(res)
+            res = torch.min(res,dim=1)[0]
+            filtered_res = res[res>12]
             outside_ratios.append(len(filtered_res)/(len(res)+1)*0.5)
         else :
             outside_ratios.append(0)
