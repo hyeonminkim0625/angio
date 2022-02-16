@@ -32,7 +32,6 @@ def centerline_loss_fn(centerlines,logit,label) :
             outside_ratios.append(len(filtered_res)/(len(res)+1)*0.5)
         else :
             outside_ratios.append(0)
-    print(outside_ratios)
     return torch.mean(torch.tensor(outside_ratios,dtype=torch.float32))
 
 """
