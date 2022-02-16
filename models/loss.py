@@ -8,7 +8,7 @@ import numpy as np
 def centerline_loss_fn(centerlines,logit,label) :
     
 
-    h,w,_ = label.shape
+    _,_h,w, = label.shape
     
     counts = []
 
