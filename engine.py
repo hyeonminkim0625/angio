@@ -33,7 +33,6 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         samples = samples.to(device)
 
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
-
         targets_center = torch.stack([s.to(device) for s in targets["center"] if s is not None],dim=0)
 
         outputs = model(samples)
@@ -65,11 +64,13 @@ def evaluate(model, criterion, data_loader, device, args):
     for samples, targets,paths in tqdm(data_loader):
         samples = samples.to(device)
 
-        targets_index = [s.to(device) for s in targets["index"]]
-        targets_center = [s.to(device) for s in targets["center"] if s is not None]
+        targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
+        targets_center = torch.stack([s.to(device) for s in targets["center"] if s is not None],dim=0)
         
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
+        if len(targets_index) !=0:
+            loss += centerline_loss_fn(targets_center,outputs,targets_index)
         total_loss += float(loss)
 
         num_classes = outputs.shape[1]
