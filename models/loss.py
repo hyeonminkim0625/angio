@@ -16,23 +16,21 @@ def centerline_loss_fn(centerlines,logit,label) :
     predict_index[label[:,1]==1] = 0
 
     outside_ratios = []
+    #batch len 2
 
     for i in range(b) :
-        mins = []
-        
-        def get_mins(x,y) :
-            distances = []
-            for c1,c2 in zip(torch.where(centerlines[i]>0.5)[0],torch.where(centerlines[i]>0.5)[1]) :
-                distances.append(((x-c1)**2+(y-c2)**2)**0.5)
 
-            return min(distances)
+        predict_dist = torch.stack([torch.where(predict_index[i]>0.5)],dim=1)
+        #len1 2
+        center_dist = torch.stack([torch.where(centerlines[i]>0.5)],dim=1)
+        #len2 2
+        res = torch.cdist(predict_dist,center_dist)
+        #len1 len2
+        res = torch.min(res,dim=1)
+        filtered_res = res[res>12]
         
-        xs = torch.where(predict_index[i]>0.5)[0]
-        ys = torch.where(predict_index[i]>0.5)[1]
-        if len(xs) < 6000 :
-            mins = list(map(lambda x,y: get_mins(x,y), xs,ys))
-            filtered_min = [b for b in mins if b>12]
-            outside_ratios.append(len(filtered_min)/(len(mins)+1)*0.5)
+        if len(predict_dist) < 6000 :
+            outside_ratios.append(len(filtered_res)/(len(res)+1)*0.5)
         else :
             outside_ratios.append(0)
     print(outside_ratios)
