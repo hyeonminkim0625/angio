@@ -31,8 +31,8 @@ def centerline_loss_fn(centerlines,logit,label) :
         ys = torch.where(predict_index[i]>0.5)[1]
         if len(xs) < 6000 :
             mins = list(map(lambda x,y: get_mins(x,y), xs,ys))
-            mins = np.array(mins)
-            outside_ratios.append(len(mins[mins>12])/(len(mins)+1)*0.5)
+            filtered_min = [b for b in mins if b>12]
+            outside_ratios.append(len(filtered_min)/(len(mins)+1)*0.5)
         else :
             outside_ratios.append(0)
     print(outside_ratios)
