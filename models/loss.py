@@ -27,6 +27,7 @@ def centerline_loss_fn(centerlines,logit,label) :
 
             return min(distances)
         
+        print(predict_index[i].shape)
         xs = torch.where(torch.any(predict_index[i]>0.5, dim=2))[0]
         ys = torch.where(torch.any(predict_index[i]>0.5, dim=2))[1]
         
