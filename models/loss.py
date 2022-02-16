@@ -27,7 +27,7 @@ def centerline_loss_fn(centerlines,logit,label) :
 
             return min(distances)
         
-        print(sum(centerlines>0.5))
+        print(torch.sum(centerlines>0.5))
         xs = torch.where(predict_index[i]>0.5)[0]
         ys = torch.where(predict_index[i]>0.5)[1]
         
