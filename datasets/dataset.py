@@ -180,10 +180,15 @@ class Angio_Dataset(torch.utils.data.Dataset):
             img = TF.to_tensor(transformed['image'])
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
 
+        target_dict = {"index": target}
         if self.args.centerline:
-            return img , {"index": target[:-1],"center": target[-1]}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
-        else:
-            return img , {"index": target}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
+            target_dict['index'] = target[:-1]
+            target_dict['center'] = target[-1]
+        if self.args.vectorloss:
+            target_dict['coord'] = torch.tensor(self.image_path[index][2])
+        
+        return img , target_dict, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
+       
         #reage_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]turn img target patient num
             
 
