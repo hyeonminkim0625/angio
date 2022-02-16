@@ -27,7 +27,7 @@ def centerline_loss_fn(centerlines,logit,label) :
 
             return min(distances)
         
-        print(predict_index[i].shape)
+        
         xs = torch.where(predict_index[i]>0.5)[0]
         ys = torch.where(predict_index[i]>0.5)[1]
         
@@ -36,7 +36,7 @@ def centerline_loss_fn(centerlines,logit,label) :
             outside_ratios.append(len(mins[mins>12])/(len(mins)+1)*0.5)
         else :
             outside_ratios.append(0)
-
+    print(outside_ratios)
     return torch.mean(torch.Tensor(outside_ratios,dtype=torch.float32))
 
 """
