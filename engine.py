@@ -130,14 +130,14 @@ def evaluate(model, criterion, data_loader, device, args):
                 """
                 prediction mask
                 """
-                saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask[1:],colors=[(255,0,51),(102,255,102)])
-                torchvision.utils.save_image(saveimg/255.0 ,pred_file_name)
+                #saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask[1:],colors=[(255,0,51),(102,255,102)])
+                #torchvision.utils.save_image(saveimg/255.0 ,pred_file_name)
 
                 """
                 target mask
                 """
-                saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask[1:],colors=[(255,0,51),(102,255,102)])
-                torchvision.utils.save_image(saveimg/255.0 , target_file_name)
+                #saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask[1:],colors=[(255,0,51),(102,255,102)])
+                #torchvision.utils.save_image(saveimg/255.0 , target_file_name)
 
                 """
                 save
@@ -164,8 +164,8 @@ def evaluate(model, criterion, data_loader, device, args):
                 pred_file_name = args.output_dir+'_'+args.model+'_'+args.mode+'/'+j['path']+'_pred.png'
                 target_file_name =  args.output_dir+'_'+args.model+'_'+args.mode+'/'+j['path']+'_target.png'
 
-                copyfile(pred_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.png')
-                copyfile(target_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.png')
+                #copyfile(pred_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.png')
+                #copyfile(target_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.png')
                 copyfile(pred_file_name.replace('png','npy'),args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.npy')
                 copyfile(target_file_name.replace('png','npy'),args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.npy')
                 copyfile(args.output_dir+'_'+args.model+'_'+args.mode+"/"+j['path']+".jpg",args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".jpg")
