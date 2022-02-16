@@ -8,7 +8,7 @@ import numpy as np
 def centerline_loss_fn(centerlines,logit,label) :
     
 
-    _,_,h,w = label.shape
+    b,_,h,w = label.shape
     
     counts = []
 
@@ -17,18 +17,18 @@ def centerline_loss_fn(centerlines,logit,label) :
 
     outside_ratios = []
 
-    for cl,pi in zip(centerlines,predict_index) :
+    for i in range(b) :
         mins = []
         
         def get_mins(x,y) :
             distances = []
-            for c1,c2 in zip(torch.where(torch.any(cl[:,:,0:1]>0.5, dim=2))[0],torch.where(torch.any(cl[:,:,0:1]>0.5, dim=2))[1]) :
+            for c1,c2 in zip(torch.where(torch.any(centerlines[i]>0.5, dim=2))[0],torch.where(torch.any(centerlines[i]>0.5, dim=2))[1]) :
                 distances.append(((x-c1)**2+(y-c2)**2)**0.5)
 
             return min(distances)
         
-        xs = torch.where(torch.any(predict_index[:,:,0:1]>0.5, dim=2))[0]
-        ys = torch.where(torch.any(predict_index[:,:,0:1]>0.5, dim=2))[1]
+        xs = torch.where(torch.any(predict_index[i]>0.5, dim=2))[0]
+        ys = torch.where(torch.any(predict_index[i]>0.5, dim=2))[1]
         
         if len(xs) < 6000 :
             mins = list(map(lambda x,y: get_mins(x,y), xs,ys))
