@@ -33,11 +33,12 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         samples = samples.to(device)
 
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
-        targets_center = torch.stack([s.to(device) for s in targets["center"] if s is not None],dim=0)
+        if 'center' in targets.keys():
+            targets_center = torch.stack([s.to(device) for s in targets["center"]],dim=0)
 
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
-        if len(targets_index) !=0:
+        if 'center' in targets.keys():
             loss += centerline_loss_fn(targets_center,outputs,targets_index)
         total_loss += float(loss)
 
@@ -65,11 +66,12 @@ def evaluate(model, criterion, data_loader, device, args):
         samples = samples.to(device)
 
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
-        targets_center = torch.stack([s.to(device) for s in targets["center"] if s is not None],dim=0)
+        if 'center' in targets.keys():
+            targets_center = torch.stack([s.to(device) for s in targets["center"]],dim=0)
         
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
-        if len(targets_index) !=0:
+        if 'center' in targets.keys():
             loss += centerline_loss_fn(targets_center,outputs,targets_index)
         total_loss += float(loss)
 

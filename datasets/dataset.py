@@ -183,7 +183,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
         if self.args.centerline:
             return img , {"index": target[:-1],"center": target[-1]}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
         else:
-            return img , {"index": target,"center": None}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
+            return img , {"index": target}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
         #reage_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]turn img target patient num
             
 
