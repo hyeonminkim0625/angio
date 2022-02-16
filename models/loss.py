@@ -27,10 +27,8 @@ def centerline_loss_fn(centerlines,logit,label) :
 
             return min(distances)
         
-        print(torch.sum(centerlines>0.5))
         xs = torch.where(predict_index[i]>0.5)[0]
         ys = torch.where(predict_index[i]>0.5)[1]
-        
         if len(xs) < 6000 :
             mins = list(map(lambda x,y: get_mins(x,y), xs,ys))
             outside_ratios.append(len(mins[mins>12])/(len(mins)+1)*0.5)
