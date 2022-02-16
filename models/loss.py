@@ -35,7 +35,7 @@ def centerline_loss_fn(centerlines,logit,label) :
         else :
             outside_ratios.append(0)
     print(outside_ratios)
-    return torch.mean(torch.Tensor(outside_ratios,dtype=torch.float32))
+    return torch.mean(torch.tensor(outside_ratios,dtype=torch.float32))
 
 """
 loss function for binary classification
