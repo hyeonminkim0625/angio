@@ -27,6 +27,7 @@ def centerline_loss_fn(centerlines,logit,label) :
         res = torch.cdist(predict_dist,center_dist)
         #len1 len2
         res = torch.min(res,dim=1)
+        print(res)
         filtered_res = res[res>12]
         
         if len(predict_dist) < 6000 :
