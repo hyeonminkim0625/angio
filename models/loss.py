@@ -20,9 +20,9 @@ def centerline_loss_fn(centerlines,logit,label) :
 
     for i in range(b) :
 
-        predict_dist = torch.stack([torch.where(predict_index[i]>0.5)],dim=1)
+        predict_dist = torch.stack(torch.where(predict_index[i]>0.5),dim=1)
         #len1 2
-        center_dist = torch.stack([torch.where(centerlines[i]>0.5)],dim=1)
+        center_dist = torch.stack(torch.where(centerlines[i]>0.5),dim=1)
         #len2 2
         res = torch.cdist(predict_dist,center_dist)
         #len1 len2
