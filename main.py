@@ -43,6 +43,7 @@ def get_args_parser():
     parser.add_argument('--model',default="unet",type=str)
     parser.add_argument('--num_classes',default=2, type=int)
     parser.add_argument('--weight_dir', default='./weight', help='path where to save, empty for no saving')
+    parser.add_argument('--centerline', default=False, type=bool)
     
     
     #eval

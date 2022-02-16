@@ -5,6 +5,39 @@ import torch.nn.functional as F
 import torchvision.transforms.functional as TF
 import numpy as np
 
+def centerline_loss_fn(centerlines,logit,label) :
+    
+
+    h,w = label.shape
+    
+    counts = []
+
+    predict_index = torch.argmax(logit,dim=1)
+    predict_index[label[:,1]==1] = 0
+
+    outside_ratios = []
+
+    for cl,pi in zip(centerlines,predict_index) :
+        mins = []
+        
+        def get_mins(x,y) :
+            distances = []
+            for c1,c2 in zip(torch.where(torch.any(cl[:,:,0:1]>0.5, dim=2))[0],torch.where(torch.any(cl[:,:,0:1]>0.5, dim=2))[1]) :
+                distances.append(((x-c1)**2+(y-c2)**2)**0.5)
+
+            return min(distances)
+        
+        xs = torch.where(torch.any(predict_index[:,:,0:1]>0.5, dim=2))[0]
+        ys = torch.where(torch.any(predict_index[:,:,0:1]>0.5, dim=2))[1]
+        
+        if len(xs) < 6000 :
+            mins = list(map(lambda x,y: get_mins(x,y), xs,ys))
+            outside_ratios.append(len(mins[mins>12])/(len(mins)+1)*0.5)
+        else :
+            outside_ratios.append(0)
+
+    return torch.mean(torch.Tensor(outside_ratios,dtype=torch.float32))
+
 """
 loss function for binary classification
 """
@@ -69,27 +102,10 @@ class Binary_Loss_wrapper(nn.Module):
             self.loss = DiceFocalLoss()
 
     def forward(self, inputs, targets):
-        
-        loss = self.loss(inputs,targets)
+        loss = 0
+        for i in range(self.num_classes):
+            loss+=self.loss(inputs[:,i],targets[:,i])
         return loss
-
-class FocalLoss_revise(nn.Module):
-    def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
-        super(FocalLoss_revise, self).__init__()
-        self.alpha = alpha
-        self.gamma = gamma
-        self.logits = logits
-        self.reduce = reduce
-        self.lossfun = nn.CrossEntropyLoss(reduction='none')
-
-    def forward(self, inputs, targets):
-        BCE_loss = self.lossfun(inputs, targets)
-        pt = torch.exp(-BCE_loss)
-        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
-        if self.reduce:
-            return torch.mean(F_loss)
-        else:
-            return F_loss
 
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
@@ -149,18 +165,16 @@ class DiceBCELoss(nn.Module):
 class DiceFocalLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(DiceFocalLoss, self).__init__()
-        self.softmax = torch.nn.LogSoftmax(dim=1)
-        self.focal_loss = FocalLoss_revise(logits=False)
+        self.focal_loss = FocalLoss(logits=False)
 
     def forward(self, inputs, targets, smooth=1):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
-        BCE = self.focal_loss(inputs, targets)
-        inputs = torch.sigmoid(inputs)
+        inputs = F.sigmoid(inputs)       
         
         intersection = (inputs * targets).sum()                            
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
-        
+        BCE = self.focal_loss(inputs, targets)
         Dice_BCE = BCE + dice_loss
         
         return Dice_BCE

@@ -17,6 +17,8 @@ from metric import averaged_hausdorff_distance as ahd, calculate_iou, calculate_
 from scipy.spatial.distance import directed_hausdorff
 import torch.nn.functional as F
 
+from models.loss import centerline_loss_fn
+
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
@@ -30,10 +32,13 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         samples = samples.to(device)
 
-        targets = targets.to(device)
+        targets_index = [s.to(device) for s in targets["index"]]
+        targets_center = [s.to(device) for s in targets["center"] if s is not None]
 
         outputs = model(samples)
-        loss = criterion(outputs, targets)
+        loss = criterion(outputs, targets_index)
+        if len(targets_index) !=0:
+            loss += centerline_loss_fn(targets_center,outputs,targets_index)
         total_loss += float(loss)
 
         optimizer.zero_grad()
@@ -58,10 +63,12 @@ def evaluate(model, criterion, data_loader, device, args):
     
     for samples, targets,paths in tqdm(data_loader):
         samples = samples.to(device)
-        targets = targets.to(device)
+
+        targets_index = [s.to(device) for s in targets["index"]]
+        targets_center = [s.to(device) for s in targets["center"] if s is not None]
         
         outputs = model(samples)
-        loss = criterion(outputs, targets)
+        loss = criterion(outputs, targets_index)
         total_loss += float(loss)
 
         num_classes = outputs.shape[1]
@@ -79,7 +86,7 @@ def evaluate(model, criterion, data_loader, device, args):
             if args.mask_argmax:
                 # [h,w,class] -> [class,h,w]
                 output_mask = F.one_hot(torch.argmax(outputs[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
-                target_mask = F.one_hot(torch.argmax(targets[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
+                target_mask = F.one_hot(torch.argmax(targets_index[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
 
             else:
                 pass
@@ -100,7 +107,7 @@ def evaluate(model, criterion, data_loader, device, args):
                 if args.mask_argmax:
                 # [h,w,class] -> [class,h,w]
                     output_mask = F.one_hot(torch.argmax(outputs[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
-                    target_mask = F.one_hot(torch.argmax(targets[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
+                    target_mask = F.one_hot(torch.argmax(targets_index[j],dim=0),num_classes=args.num_classes).permute(2,0,1)
                 else:
                     pass
                 output_mask = output_mask.to(dtype=torch.bool, device='cpu')

@@ -14,14 +14,9 @@ import csv
 import pdb
 import pandas as pd
 from tqdm import tqdm
-from utils import histogram_eq
+from utils import histogram_eq, gaussian_heatmap_re, draw_centerline
 from pathlib import Path
 
-def gaussian_heatmap_re(heatmap,x,y,sigma):
-    for i_ in range(512):
-        for j_ in range(512):
-            heatmap[i_, j_] += ((y-i_)**2 + (x-j_)**2)**sigma
-    return heatmap
 
 class Angio_Dataset(torch.utils.data.Dataset):
     def __init__(self,num_classes,mode,args):
@@ -59,8 +54,11 @@ class Angio_Dataset(torch.utils.data.Dataset):
                             annotated_dot = 255-annotated_dot
                             np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
 
+                        if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                            centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
+                            cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
                         img_list.append(temp)
-                  
+
             self.image_path = img_list
             self.mode = "train"
             print('train ',len(self.image_path))
@@ -82,6 +80,11 @@ class Angio_Dataset(torch.utils.data.Dataset):
                             annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
                             annotated_dot = 255-annotated_dot
                             np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
+
+                        if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                            centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
+                            cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
+                        
                         img_list.append(temp)                
                   
             self.image_path = img_list
@@ -116,11 +119,21 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         target_index = target_index[:,:,0]
         h,w = target_index.shape
-        target = np.zeros((h,w,self.num_classes))
+        
+        
+        img = img_load(image_path)
+
+        if self.args.centerline:
+            centerline = img_load("/data/angiosegmentation/cenerline/"+self.image_path[index][3]+'_'+str(self.args.sigma)+'.png')
+            centerline = cv2.cvtColor(centerline, cv2.COLOR_BGR2GRAY)
+            target = np.zeros((h,w,self.num_classes+1))
+            target[:,:,-1] = centerline
+        else:
+            target = np.zeros((h,w,self.num_classes))
+
         for i in range(self.num_classes):
             target[:,:,i] = (target_index==i)*1
-        target = target.astype(np.float32)
-        img = img_load(image_path)
+        target = target.astype(np.int64)
 
         if self.args.histogram_eq:
             img[:,:,1] = histogram_eq(img[:,:,1])
@@ -167,8 +180,12 @@ class Angio_Dataset(torch.utils.data.Dataset):
             img = TF.to_tensor(transformed['image'])
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
 
-        #return img target patient num
-        return img , target, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
+        if self.args.centerline:
+            return img , {"index": target[:-1],"center": target[-1]}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
+        else:
+            return img , {"index": target,"center": None}, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
+        #reage_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]turn img target patient num
+            
 
     def __len__(self):
         return len(self.image_path)
