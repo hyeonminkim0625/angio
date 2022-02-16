@@ -36,9 +36,6 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         targets_center = torch.stack([s.to(device) for s in targets["center"] if s is not None],dim=0)
 
-        print(targets_center.shape)
-        print(targets_index.shape)
-
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
         if len(targets_index) !=0:
