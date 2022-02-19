@@ -78,7 +78,7 @@ def positionalencoding2d(d_model, height, width):
     if d_model % 4 != 0:
         raise ValueError("Cannot use sin/cos positional encoding with "
                          "odd dimension (got dim={:d})".format(d_model))
-    pe = torch.zeros(d_model, height, width)
+    pe = torch.zeros(d_model, height, width,requires_grad=False)
     # Each dimension use half of d_model
     d_model = int(d_model / 2)
     div_term = torch.exp(torch.arange(0., d_model, 2) *
