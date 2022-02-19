@@ -131,7 +131,7 @@ class UNet(nn.Module):
 
         bottleneck = self.bottleneck(self.pool4(enc4))
 
-        bottleneck += positionalencoding2d(512,16,16).unsqueeze(0).to('cuda')
+        #bottleneck += positionalencoding2d(512,16,16).unsqueeze(0).to('cuda')
         #batch dim seq -> seq batch dim
         bottleneck = self.transformer_encoder(bottleneck.flatten(2,3).permute(2,0,1))
 
