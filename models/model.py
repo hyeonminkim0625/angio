@@ -96,6 +96,9 @@ class UNet(nn.Module):
         self.encoder4 = UNet._block(features * 4, features * 8, name="enc4")
         self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
 
+
+        self.transformer_pool = nn.MaxPool2d(kernel_size=8, stride=8)
+
         self.bottleneck = UNet._block(features * 8, features * 16, name="bottleneck")
 
         self.upconv4 = nn.ConvTranspose2d(
@@ -119,21 +122,21 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
-        encoder_layer = nn.TransformerEncoderLayer(d_model=64, nhead=4)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=32, nhead=4)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
+        self.vision = nn.Upsample(scale_factor=8, mode='bilinear')
 
     def forward(self, x):
         
         enc1 = self.encoder1(x)
-        enc2 = self.encoder2(self.pool1(enc1))
-        enc2 = self.pool2(enc2)
 
-        enc2 = enc2 + positionalencoding2d(64,64,64).unsqueeze(0).to('cuda')
+        enc1_ = self.transformer_pool(enc1) + positionalencoding2d(32,32,32).unsqueeze(0).to('cuda')
         #batch dim seq -> seq batch dim
-        enc2 = self.transformer_encoder(enc2.flatten(2,3).permute(2,0,1))
-        enc2 = enc2.permute(1,2,0).view(-1,64,64,64)
+        enc1_ = self.transformer_encoder(enc1_.flatten(2,3).permute(2,0,1))
+        enc1_ = enc1_.permute(1,2,0).view(-1,32,32,32)
 
-        enc3 = self.encoder3(enc2)
+        enc2 = self.encoder2(self.pool1(enc1))
+        enc3 = self.encoder3(self.pool2(enc2))
         enc4 = self.encoder4(self.pool3(enc3))
 
         bottleneck = self.bottleneck(self.pool4(enc4))
@@ -156,7 +159,7 @@ class UNet(nn.Module):
         dec2 = torch.cat((dec2, enc2), dim=1)
         dec2 = self.decoder2(dec2)
         dec1 = self.upconv1(dec2)
-        dec1 = torch.cat((dec1, enc1), dim=1)
+        dec1 = torch.cat((dec1, self.vision(enc1_)), dim=1)
         dec1 = self.decoder1(dec1)
         return {"out" : self.conv(dec1)}
 
