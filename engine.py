@@ -40,10 +40,13 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
+
+        """
         if 'center' in targets.keys():
             loss += centerline_loss_fn(targets_center,outputs,targets_index)
         if 'coord' in targets.keys():
             loss += vector_loss(targets_coord,outputs,targets_index)
+        """
         total_loss += float(loss)
 
         optimizer.zero_grad()
