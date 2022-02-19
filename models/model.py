@@ -125,13 +125,14 @@ class UNet(nn.Module):
     def forward(self, x):
         
         enc1 = self.encoder1(x)
+        enc1 = self.pool1(enc1)
 
-        enc1 = enc1 + positionalencoding2d(32,256,256).unsqueeze(0).to('cuda')
+        enc1 = enc1 + positionalencoding2d(32,128,128).unsqueeze(0).to('cuda')
         #batch dim seq -> seq batch dim
         enc1 = self.transformer_encoder(enc1.flatten(2,3).permute(2,0,1))
-        enc1 = enc1.permute(1,2,0).view(-1,32,256,256)
+        enc1 = enc1.permute(1,2,0).view(-1,32,128,128)
 
-        enc2 = self.encoder2(self.pool1(enc1))
+        enc2 = self.encoder2()
         enc3 = self.encoder3(self.pool2(enc2))
         enc4 = self.encoder4(self.pool3(enc3))
 
