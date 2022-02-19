@@ -121,7 +121,7 @@ class UNet(nn.Module):
 
         encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
-        self.pe = positionalencoding2d(512,16,16).unsqueeze(0)
+        self.pe = positionalencoding2d(512,16,16).unsqueeze(0).to('cuda')
 
     def forward(self, x):
         
