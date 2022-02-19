@@ -125,18 +125,27 @@ class UNet(nn.Module):
     def forward(self, x):
         
         enc1 = self.encoder1(x)
+        
+        enc1 = enc1 + positionalencoding2d(32,256,256).unsqueeze(0).to('cuda')
+        #batch dim seq -> seq batch dim
+        enc1 = self.transformer_encoder(enc1.flatten(2,3).permute(2,0,1))
+        enc1 = enc1.permute(1,2,0).view(-1,32,256,256)
+
         enc2 = self.encoder2(self.pool1(enc1))
         enc3 = self.encoder3(self.pool2(enc2))
         enc4 = self.encoder4(self.pool3(enc3))
 
         bottleneck = self.bottleneck(self.pool4(enc4))
 
+        """
         bottleneck = bottleneck + positionalencoding2d(512,16,16).unsqueeze(0).to('cuda')
         #batch dim seq -> seq batch dim
         bottleneck = self.transformer_encoder(bottleneck.flatten(2,3).permute(2,0,1))
+        bottleneck = bottleneck.permute(1,2,0).view(-1,512,16,16)
+        """
 
         #seq batch dim -> batch dim seq
-        dec4 = self.upconv4(bottleneck.permute(1,2,0).view(-1,512,16,16))
+        dec4 = self.upconv4(bottleneck)
         dec4 = torch.cat((dec4, enc4), dim=1)
         dec4 = self.decoder4(dec4)
         dec3 = self.upconv3(dec4)
