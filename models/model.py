@@ -1,3 +1,4 @@
+from pickletools import ArgumentDescriptor
 import torch
 import torch.nn as nn
 import torchvision
@@ -7,6 +8,7 @@ import torchvision.transforms.functional as TF
 from models.convlstm import ConvLSTM
 from models.unet_plusplus import Nested_UNet
 from models.deeplabv3plus.deeplab import DeepLab
+from utils import positionalencoding2d
 """
 https://github.com/niecongchong/HRNet-keras-semantic-segmentation/blob/master/model/seg_hrnet.py
 """
@@ -117,6 +119,10 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
+        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8,batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
+        self.pe = positionalencoding2d(512,8,8)
+
     def forward(self, x):
         
         enc1 = self.encoder1(x)
@@ -126,7 +132,10 @@ class UNet(nn.Module):
 
         bottleneck = self.bottleneck(self.pool4(enc4))
 
-        dec4 = self.upconv4(bottleneck)
+        bottleneck += self.pe
+        bottleneck = self.transformer_encoder(bottleneck.flatten(2,3))
+
+        dec4 = self.upconv4(bottleneck.view(-1,512,8,8))
         dec4 = torch.cat((dec4, enc4), dim=1)
         dec4 = self.decoder4(dec4)
         dec3 = self.upconv3(dec4)
