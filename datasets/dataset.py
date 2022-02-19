@@ -184,8 +184,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
         if self.args.centerline:
             target_dict['index'] = target[:-1]
             target_dict['center'] = target[-1]
-        if self.args.vectorloss:
-            target_dict['coord'] = torch.tensor(self.image_path[index][2])
+        #if self.args.vectorloss:
+        #    target_dict['coord'] = torch.tensor(self.image_path[index][2])
         
         return img , target_dict, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
        
