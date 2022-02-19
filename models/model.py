@@ -119,13 +119,13 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
-        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=32, nhead=4)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
 
     def forward(self, x):
         
         enc1 = self.encoder1(x)
-        
+
         enc1 = enc1 + positionalencoding2d(32,256,256).unsqueeze(0).to('cuda')
         #batch dim seq -> seq batch dim
         enc1 = self.transformer_encoder(enc1.flatten(2,3).permute(2,0,1))
