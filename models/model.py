@@ -119,9 +119,9 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
-        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8,batch_first=True)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
-        self.pe = positionalencoding2d(512,8,8)
+        self.pe = positionalencoding2d(512,8,8).unsqueeze(0)
 
     def forward(self, x):
         
@@ -133,9 +133,11 @@ class UNet(nn.Module):
         bottleneck = self.bottleneck(self.pool4(enc4))
 
         bottleneck += self.pe
-        bottleneck = self.transformer_encoder(bottleneck.flatten(2,3))
+        #batch dim seq -> seq batch dim
+        bottleneck = self.transformer_encoder(bottleneck.flatten(2,3).permute(2,0,1))
 
-        dec4 = self.upconv4(bottleneck.view(-1,512,8,8))
+        #seq batch dim -> batch dim seq
+        dec4 = self.upconv4(bottleneck.permute(1,2,0).view(-1,512,8,8))
         dec4 = torch.cat((dec4, enc4), dim=1)
         dec4 = self.decoder4(dec4)
         dec3 = self.upconv3(dec4)

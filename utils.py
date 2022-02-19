@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import torch
 
 def histogram_eq(img):
     hist, bins = np.histogram(img.flatten(), 256,[0,256])
