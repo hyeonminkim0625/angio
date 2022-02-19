@@ -121,7 +121,7 @@ class UNet(nn.Module):
 
         encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
-        self.pe = positionalencoding2d(512,8,8).unsqueeze(0)
+        self.pe = positionalencoding2d(512,16,16).unsqueeze(0)
 
     def forward(self, x):
         
@@ -137,7 +137,7 @@ class UNet(nn.Module):
         bottleneck = self.transformer_encoder(bottleneck.flatten(2,3).permute(2,0,1))
 
         #seq batch dim -> batch dim seq
-        dec4 = self.upconv4(bottleneck.permute(1,2,0).view(-1,512,8,8))
+        dec4 = self.upconv4(bottleneck.permute(1,2,0).view(-1,512,16,16))
         dec4 = torch.cat((dec4, enc4), dim=1)
         dec4 = self.decoder4(dec4)
         dec3 = self.upconv3(dec4)
