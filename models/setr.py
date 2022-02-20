@@ -52,7 +52,7 @@ class SETR(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
         self.decoder = Decoder()
         
-        self.cls = nn.Conv2d(256,self.num_classes, 1, padding=0)
+        self.cls = nn.Conv2d(256,self.num_classes, 3, padding=1)
         #self.decoder_upscale = nn.Upsample(scale_factor=4, mode='nearest')
 
         #self.upscale = nn.Upsample(scale_factor=4, mode='nearest')
