@@ -21,7 +21,7 @@ class Decoder(nn.Module):
         return x
 
 class SETR(nn.Module):
-    def __init__(self, embed_dim = 256, patch_size = 16):
+    def __init__(self, embed_dim = 256, patch_size = 8):
         super(SETR, self).__init__()
         self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.norm_layer = nn.LayerNorm(256)
