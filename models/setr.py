@@ -49,7 +49,7 @@ class SETR(nn.Module):
         self.num_classes = 2
         self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
         encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=12)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
         self.decoder = Decoder()
         
         self.cls = nn.Conv2d(256,self.num_classes, 1, padding = 0)
