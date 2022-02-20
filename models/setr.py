@@ -65,8 +65,8 @@ class SETR(nn.Module):
         x = self.transformer_encoder(x)
         x = x.permute(1,2,0).view(-1,256,32,32)
 
-        x = self.decoder_upscale(x)
+        #x = self.decoder_upscale(x)
         x = self.decoder(x)
         x = self.cls(x)
-        x = self.upscale(x)
+        #x = self.upscale(x)
         return {"out" :x}
