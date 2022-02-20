@@ -10,7 +10,6 @@ from models.setr import SETR
 from models.unet_plusplus import Nested_UNet
 from models.deeplabv3plus.deeplab import DeepLab
 from utils import positionalencoding2d
-from setr import SETR
 """
 https://github.com/niecongchong/HRNet-keras-semantic-segmentation/blob/master/model/seg_hrnet.py
 """
