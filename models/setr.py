@@ -28,7 +28,7 @@ class SETR(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=256, nhead=4)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
         self.decoder = Decoder()
-
+        self.num_classes = 2
         self.cls = nn.Conv2d(256,self.num_classes, 1, padding=0)
 
     def forward(self, x):
