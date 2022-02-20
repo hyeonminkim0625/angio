@@ -6,9 +6,11 @@ from collections import OrderedDict
 import torch.nn.functional as F
 import torchvision.transforms.functional as TF
 from models.convlstm import ConvLSTM
+from models.setr import SETR
 from models.unet_plusplus import Nested_UNet
 from models.deeplabv3plus.deeplab import DeepLab
 from utils import positionalencoding2d
+from setr import SETR
 """
 https://github.com/niecongchong/HRNet-keras-semantic-segmentation/blob/master/model/seg_hrnet.py
 """
@@ -45,6 +47,8 @@ class BaseLine_wrapper(nn.Module):
             self.model = torchvision.models.segmentation.fcn_resnet50(pretrained=False,num_classes=_num_classes)
         elif self._model == "unetpp":
             self.model = Nested_UNet(_num_classes,3,deep_supervision=True)
+        elif self._model == "setr":
+            self.model = SETR()
         elif args.model == 'deeplabv3plus':
             self.model = DeepLab(backbone='resnet', output_stride=8, num_classes=_num_classes,sync_bn=False, freeze_bn=False)
     def forward(self, x):

@@ -63,7 +63,7 @@ def train(args):
     
     model = None
 
-    if args.model == 'unet' or args.model == 'deeplab' or args.model == 'fcn' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus":
+    if args.model == 'unet' or args.model == 'deeplab' or args.model == 'fcn' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus" or args.model == "setr":
         model = BaseLine_wrapper(args)
     else:
         print("model input error")
