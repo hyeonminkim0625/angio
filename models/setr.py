@@ -31,14 +31,19 @@ class SETR(nn.Module):
         self.num_classes = 2
         self.cls = nn.Conv2d(256,self.num_classes, 1, padding=0)
 
+        self.decoder_upscale = nn.Upsample(scale_factor=4, mode='bilinear')
+
+        self.upscale = nn.Upsample(scale_factor=4, mode='bilinear')
+
     def forward(self, x):
         #batch channel h w
         x = self.proj(x) + positionalencoding2d(256,32,32).unsqueeze(0).to('cuda')
         x = x.flatten(2,3).permute(2,0,1)
         x = self.transformer_encoder(x)
         x = x.permute(1,2,0).view(-1,256,32,32)
+
+        x = self.decoder_upscale(x)
         x = self.decoder(x)
         x = self.cls(x)
-        print(x.shape)
-        exit()
+        x = self.upscale(x)
         return {"out" :x}
