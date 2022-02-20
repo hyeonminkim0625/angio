@@ -39,4 +39,6 @@ class SETR(nn.Module):
         x = x.permute(1,2,0).view(-1,256,32,32)
         x = self.decoder(x)
         x = self.cls(x)
+        print(x.shape)
+        exit()
         return {"out" :x}
