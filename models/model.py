@@ -123,7 +123,7 @@ class UNet(nn.Module):
         )
 
         self.transformer_pool = nn.MaxPool2d(kernel_size=4, stride=4)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=256, nhead=4)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=64, nhead=4)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
         self.vision = nn.Upsample(scale_factor=4, mode='bilinear')
 
