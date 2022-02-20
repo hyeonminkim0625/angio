@@ -10,7 +10,7 @@ class convblock(nn.Module):
     def __init__(self,in_channel):
         super(convblock, self).__init__()
         self.head = nn.Sequential(nn.Conv2d(in_channel, in_channel//2, 3, padding=1, bias=False),
-                                  nn.BatchNorm2d(num_features=256),
+                                  nn.BatchNorm2d(num_features=in_channel//2),
                                   nn.ReLU())
         self.upsample = nn.Upsample(scale_factor = 2, mode='nearest')
 
