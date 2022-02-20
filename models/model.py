@@ -122,11 +122,10 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
-        #self.transformer_pool = nn.MaxPool2d(kernel_size=8, stride=8)
-        
-        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=4)
+        self.transformer_pool = nn.MaxPool2d(kernel_size=4, stride=4)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=256, nhead=4)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
-        #self.vision = nn.Upsample(scale_factor=8, mode='bilinear')
+        self.vision = nn.Upsample(scale_factor=4, mode='bilinear')
 
     def forward(self, x):
         
@@ -140,6 +139,12 @@ class UNet(nn.Module):
         """
 
         enc2 = self.encoder2(self.pool1(enc1))
+
+        enc2_ = self.transformer_pool(enc2) + positionalencoding2d(64,32,32).unsqueeze(0).to('cuda')
+        #batch dim seq -> seq batch dim
+        enc2_ = self.transformer_encoder(enc2_.flatten(2,3).permute(2,0,1))
+        enc2_ = enc2_.permute(1,2,0).view(-1,64,32,32)
+
         enc3 = self.encoder3(self.pool2(enc2))
         enc4 = self.encoder4(self.pool3(enc3))
 
@@ -160,7 +165,7 @@ class UNet(nn.Module):
         dec3 = torch.cat((dec3, enc3), dim=1)
         dec3 = self.decoder3(dec3)
         dec2 = self.upconv2(dec3)
-        dec2 = torch.cat((dec2, enc2), dim=1)
+        dec2 = torch.cat((dec2, self.vision(enc2_)), dim=1)
         dec2 = self.decoder2(dec2)
         dec1 = self.upconv1(dec2)
         dec1 = torch.cat((dec1, enc1), dim=1)
