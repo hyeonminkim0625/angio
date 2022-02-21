@@ -115,7 +115,7 @@ class SETR(nn.Module):
         x1 = self.cls(x1)
 
         #x = self.upscale(x)
-        return {"out" : xs['1']}
+        return {"out" : x1}
 
 
 #main.py --batch_size=4 --model=setr --epochs=50 --lr_drop=40 --mask_argmax --opt=adamw --loss=crossentropy --lr=2e-4 --withcoordinate=concat_heatmap --img_size=384 --centerline=False --weight_path=./weight_unet_30/setr_33.pth --mode=val --saveallfig --onlymask --eval --report_hard_sample=30 --output_dir=./result --wandb
