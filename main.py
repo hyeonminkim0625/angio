@@ -99,7 +99,7 @@ def train(args):
     
     
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
-    cheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=scheduler)
+    #cheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=scheduler)
     model.to(device)
     criterion.to(device)
 
@@ -129,7 +129,7 @@ def train(args):
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
             
-        cheduler_warmup.step()
+        scheduler.step()
 
 def eval(args):
     model = None
