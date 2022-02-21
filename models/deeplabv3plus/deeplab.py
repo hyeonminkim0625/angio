@@ -29,7 +29,7 @@ class DeepLab(nn.Module):
         #x, low_level_feat = self.backbone(input)
         low_level_feat_,low_level_feat,x,x_ = self.backbone(input)
         
-        x_ = F.interpolate(x_, size=x.size()[2:], mode='nearest', align_corners=True)
+        x_ = F.interpolate(x_, size=x.size()[2:], mode='nearest')
         x = self.aspp(torch.cat((x,x_),dim=1))
         
         x = self.decoder1(x, low_level_feat)
