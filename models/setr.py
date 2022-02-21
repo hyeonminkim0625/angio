@@ -6,10 +6,7 @@ from torchvision.models._utils import IntermediateLayerGetter
 import timm
 from utils import positionalencoding2d
 
-def get_activation(name):
-    def hook(model, input, output):
-        activation[name] = output.detach()
-    return hook
+
 
 class convblock(nn.Module):
     """Some Information about convblock"""
