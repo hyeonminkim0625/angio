@@ -25,7 +25,8 @@ class DeepLab(nn.Module):
         self.freeze_bn = freeze_bn
 
     def forward(self, input):
-        x, low_level_feat = self.backbone(input)
+        #x, low_level_feat = self.backbone(input)
+        low_level_feat,x = self.backbone(input)
         
         x = self.aspp(x)
         
