@@ -57,7 +57,7 @@ class SETR(nn.Module):
         self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.layer4_proj = nn.Conv2d(2048, 256, kernel_size=1)
         self.layer3_proj = nn.Conv2d(1024, 256, kernel_size=1)
-        self.layer2_proj = nn.Conv2d(512, 128, kernel_size=1)
+        self.layer2_proj = nn.Conv2d(512, 256, kernel_size=1)
         self.layer1_proj = nn.Conv2d(256, 128, kernel_size=1)
 
         model = timm.create_model('resnet50', pretrained=True)
@@ -70,10 +70,11 @@ class SETR(nn.Module):
 
         self.transformer_decoder_4 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
         self.transformer_decoder_3 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
+        self.transformer_decoder_2 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
 
         self.head4 = convblock(256,128)
         self.head3 = convblock(384,128)
-        self.head2 = convblock(256,128)
+        self.head2 = convblock(384,128)
         self.head1 = convblock(256,256)
         #self.head0 = convblock(256,256)
         
@@ -109,6 +110,12 @@ class SETR(nn.Module):
         x3 = x3.flatten(2,3).permute(2,0,1)
         x3 = self.transformer_decoder_3(x3,x)
         x3 = x3.permute(1,2,0).view(-1,256,h,w)
+
+        b,_,h,w = x2.shape
+        x2 = x2 + positionalencoding2d(256,h,w).unsqueeze(0).to('cuda')
+        x2 = x2.flatten(2,3).permute(2,0,1)
+        x2 = self.transformer_decoder_3(x2,x)
+        x2 = x2.permute(1,2,0).view(-1,256,h,w)
         
         x4 = self.head4(x4)
         x3 = self.head3(torch.cat((x3,x4),dim=1))
