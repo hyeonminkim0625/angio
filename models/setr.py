@@ -6,6 +6,11 @@ from torchvision.models._utils import IntermediateLayerGetter
 import timm
 from utils import positionalencoding2d
 
+def get_activation(name):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+    return hook
+
 class convblock(nn.Module):
     """Some Information about convblock"""
     def __init__(self,in_channel,out_channel):
@@ -50,11 +55,12 @@ class SETR(nn.Module):
         self.num_classes = 2
         #self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
         model = timm.create_model('vit_base_r50_s16_384', pretrained=True)
-        self.model =  IntermediateLayerGetter(model,return_layers={'norm':'0'})
+        return_layers = {"layer1": "0", "layer2": "1", "layer3": "2", "layer4": "3"}
+        self.model =  IntermediateLayerGetter(model,return_layers={'patch_embed':'0','norm':'1'})
         #transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=12)
         self.decoder = Decoder()
-        
-        self.cls = nn.Conv2d(256,self.num_classes, 1, padding = 0)
+        return_layers={'stages':'0','norm':'1'}
+        self.cls = nn.Conv2d(256, self.num_classes, 1, padding = 0)
         #self.decoder_upscale = nn.Upsample(scale_factor=4, mode='nearest')
 
         #self.upscale = nn.Upsample(scale_factor=4, mode='nearest')
@@ -67,6 +73,7 @@ class SETR(nn.Module):
         #x = x.permute(1,2,0).view(-1,512,32,32)
 
         #x = self.decoder_upscale(x)
+        activation = {}
         b,_,h,w = x.shape
         x = self.model(x)['0']
         #print(x.shape)
@@ -77,3 +84,6 @@ class SETR(nn.Module):
         x = self.cls(x)
         #x = self.upscale(x)
         return {"out" :x}
+
+
+#main.py --batch_size=4 --model=setr --epochs=50 --lr_drop=40 --mask_argmax --opt=adamw --loss=crossentropy --lr=2e-4 --withcoordinate=concat_heatmap --img_size=384 --centerline=False --weight_path=./weight_unet_30/setr_33.pth --mode=val --saveallfig --onlymask --eval --report_hard_sample=30 --output_dir=./result --wandb
