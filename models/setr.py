@@ -70,6 +70,8 @@ class SETR(nn.Module):
         b,_,h,w = x.shape
         x = self.model(x)['0']
         x = x.transpose(2,1).reshape(b,-1,h,w)
+
+        print(x.shape)
         x = self.decoder(x)
         x = self.cls(x)
         #x = self.upscale(x)
