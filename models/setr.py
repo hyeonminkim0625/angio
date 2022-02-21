@@ -81,7 +81,7 @@ class SETR(nn.Module):
         self.cls = nn.Conv2d(256, self.num_classes, 1, padding = 0)
         #self.decoder_upscale = nn.Upsample(scale_factor=4, mode='nearest')
 
-        self.upscale = nn.Upsample(scale_factor=2, mode='nearest')
+        #self.upscale = nn.Upsample(scale_factor=2, mode='nearest')
 
     def forward(self, x):
         #batch channel h w
@@ -113,6 +113,7 @@ class SETR(nn.Module):
         x2 = self.head2(torch.cat((x2,x3),dim=1))
         x1 = self.head1(torch.cat((x1,x2),dim=1))
         x1 = self.cls(x1)
+        print(x1.shape)
 
         #x = self.upscale(x)
         return {"out" : x1}
