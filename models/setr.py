@@ -54,7 +54,7 @@ class SETR(nn.Module):
         super(SETR, self).__init__()
         self.num_classes = 2
         #self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
-        model = timm.create_model('vit_base_r50_s16_384', pretrained=True)
+        model = timm.create_model('vit_base_r50_s16_384', pretrained=False)
         return_layers = {"layer1": "0", "layer2": "1", "layer3": "2", "layer4": "3"}
         #self.model =  IntermediateLayerGetter(model,return_layers={'patch_embed':'0','norm':'1'})
         self.model =  IntermediateLayerGetter(model,return_layers={'norm':'0'})
