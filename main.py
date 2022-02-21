@@ -105,10 +105,10 @@ def train(args):
 
     
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=False)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=24, batch_size=args.batch_size,shuffle=True,drop_last=False)
 
     val_dataset = Angio_Dataset(args.num_classes,mode = "val",args=args)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=False)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=24, batch_size=args.batch_size,shuffle=False,drop_last=False)
 
     for i in range(args.epochs):
         

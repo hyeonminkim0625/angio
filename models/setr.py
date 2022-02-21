@@ -49,7 +49,7 @@ class SETR(nn.Module):
         super(SETR, self).__init__()
         self.num_classes = 2
         #self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
-        model = timm.create_model('vit_base_patch16_384', pretrained=False)
+        model = timm.create_model('vit_base_patch16_384', pretrained=True)
         self.model =  IntermediateLayerGetter(model,return_layers={'norm':'0'})
         #transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=12)
         self.decoder = Decoder()
