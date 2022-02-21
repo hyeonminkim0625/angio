@@ -72,7 +72,7 @@ class SETR(nn.Module):
         self.transformer_decoder_3 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
 
         self.head4 = convblock(256,128)
-        self.head3 = convblock(368,128)
+        self.head3 = convblock(384,128)
         self.head2 = convblock(256,128)
         self.head1 = convblock(256,256)
         #self.head0 = convblock(256,256)
