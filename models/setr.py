@@ -105,10 +105,10 @@ class SETR(nn.Module):
         x4 = x4.permute(1,2,0).view(-1,256,h,w)
 
         b,_,h,w = x3.shape
-        x3 = x3 + positionalencoding2d(128,h,w).unsqueeze(0).to('cuda')
+        x3 = x3 + positionalencoding2d(256,h,w).unsqueeze(0).to('cuda')
         x3 = x3.flatten(2,3).permute(2,0,1)
         x3 = self.transformer_decoder_3(x3,x)
-        x3 = x3.permute(1,2,0).view(-1,128,h,w)
+        x3 = x3.permute(1,2,0).view(-1,256,h,w)
         
         x4 = self.head4(x4)
         x3 = self.head3(torch.cat((x3,x4),dim=1))
