@@ -70,6 +70,7 @@ def evaluate(model, criterion, data_loader, device, args):
     path_iou_array=[]
     
     for samples, targets,paths in tqdm(data_loader):
+        
         samples = samples.to(device)
 
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
@@ -78,8 +79,10 @@ def evaluate(model, criterion, data_loader, device, args):
         
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
+        """
         if 'center' in targets.keys():
             loss += centerline_loss_fn(targets_center,outputs,targets_index)
+        """    
         total_loss += float(loss)
 
         num_classes = outputs.shape[1]

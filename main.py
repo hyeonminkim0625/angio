@@ -164,6 +164,7 @@ def eval(args):
     if args.weight_path is not "/":
         checkpoint = torch.load(args.weight_path)
         model.load_state_dict(checkpoint['model_state_dict'])
+        print('load weight')
     evaluate(model, criterion, val_dataloader ,device , args)
         
 
