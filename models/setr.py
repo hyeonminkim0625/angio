@@ -68,7 +68,7 @@ class SETR(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(256,8)
         self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
 
-        self.transformer_decoder_4 = nn.TransformerEncoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
+        self.transformer_decoder_4 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
 
         self.head4 = convblock(256,128)
         self.head3 = convblock(256,128)
