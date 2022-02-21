@@ -20,6 +20,8 @@ import numpy as np
 import random
 import torch_optimizer as optim
 from optimizer import radam_lookahead as rl
+from warmup_scheduler import GradualWarmupScheduler
+
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
@@ -95,7 +97,9 @@ def train(args):
     elif args.opt == 'radam':
         optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     
+    
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
+    cheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=scheduler)
     model.to(device)
     criterion.to(device)
 
@@ -123,7 +127,7 @@ def train(args):
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
             
-        scheduler.step()
+        cheduler_warmup.step()
 
 def eval(args):
     model = None
