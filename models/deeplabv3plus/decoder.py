@@ -9,10 +9,10 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         
 
-        self.conv1 = nn.Conv2d(low_level_inplanes, 48, 1, bias=False)
-        self.bn1 = BatchNorm(48)
+        self.conv1 = nn.Conv2d(low_level_inplanes, 64, 1, bias=False)
+        self.bn1 = BatchNorm(64)
         self.relu = nn.ReLU()
-        self.last_conv = nn.Sequential(nn.Conv2d(304, 256, kernel_size=3, stride=1, padding=1, bias=False),
+        self.last_conv = nn.Sequential(nn.Conv2d(320, 256, kernel_size=3, stride=1, padding=1, bias=False),
                                        BatchNorm(256),
                                        nn.ReLU(),
                                        nn.Dropout(0.5),
