@@ -17,7 +17,11 @@ class convblock(nn.Module):
         super(convblock, self).__init__()
         self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
-                                  nn.ReLU())
+                                  nn.ReLU(),
+                                  nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(num_features=out_channel),
+                                  nn.ReLU()
+                                  )
         self.upsample = nn.Upsample(scale_factor = 2, mode='nearest')
 
     def forward(self, x):
@@ -94,14 +98,13 @@ class SETR(nn.Module):
         xs['3'] = xs['3'].flatten(2,3).permute(2,0,1)
         xs['3'] = self.transformer(xs['3'])
         xs['3'] = xs['3'].permute(1,2,0).view(-1,512,h,w)
-        #print(x.shape)
 
         #print(x.shape)
         xs['3'] = self.head1(xs['3'])
         xs['2'] = self.head2(torch.cat([xs['3'], xs['2']],dim=1))
         xs['1'] = self.head3(torch.cat([xs['2'], xs['1']],dim=1))
+        xs['1'] = self.head4(xs['1'])
         xs['1'] = self.cls(xs['1'])
-        xs['1'] = self.upscale(xs['1'])
         #x = self.upscale(x)
         return {"out" : xs['1']}
 
