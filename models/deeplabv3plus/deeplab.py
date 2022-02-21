@@ -13,7 +13,6 @@ class DeepLab(nn.Module):
         super(DeepLab, self).__init__()
         if backbone == 'drn':
             output_stride = 8
-
         if sync_bn == True:
             BatchNorm = SynchronizedBatchNorm2d
         else:
@@ -27,8 +26,7 @@ class DeepLab(nn.Module):
 
     def forward(self, input):
         x, low_level_feat = self.backbone(input)
-        print(x.shape, low_level_feat.shape)
-        exit()
+        
         x = self.aspp(x)
         
         x = self.decoder(x, low_level_feat)
