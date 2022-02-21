@@ -114,7 +114,7 @@ class SETR(nn.Module):
         x2 = self.head2(torch.cat((x2,x3),dim=1))
         x1 = self.head1(torch.cat((x1,x2),dim=1))
         x1 = self.cls(x1)
-        x1 = self.up(x1)
+        x1 = self.upscale(x1)
         #print(x1.shape)
 
         #x = self.upscale(x)
