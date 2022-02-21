@@ -31,7 +31,7 @@ class Decoder(nn.Module):
                                   nn.BatchNorm2d(num_features=256),
                                   nn.ReLU(),)
         """
-        self.head1 = convblock(512,256)
+        self.head1 = convblock(768,256)
         self.head2 = convblock(256,256)
         self.head3 = convblock(256,256)
         self.head4 = convblock(256,256)
@@ -69,10 +69,10 @@ class SETR(nn.Module):
         #x = self.decoder_upscale(x)
         b,_,h,w = x.shape
         x = self.model(x)['0']
-        print(x.shape)
+        #print(x.shape)
         x = x.transpose(2,1).reshape(b,-1,h//16,w//16)
 
-        print(x.shape)
+        #print(x.shape)
         x = self.decoder(x)
         x = self.cls(x)
         #x = self.upscale(x)
