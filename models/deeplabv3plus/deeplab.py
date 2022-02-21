@@ -27,6 +27,7 @@ class DeepLab(nn.Module):
 
     def forward(self, input):
         x, low_level_feat = self.backbone(input)
+        print(x.shape, low_level_feat.shape)
         
         x = self.aspp(x)
         
