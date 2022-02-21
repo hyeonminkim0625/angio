@@ -58,7 +58,7 @@ class SETR(nn.Module):
         self.layer4_proj = nn.Conv2d(2048, 256, kernel_size=1)
         self.layer3_proj = nn.Conv2d(1024, 128, kernel_size=1)
         self.layer2_proj = nn.Conv2d(512, 128, kernel_size=1)
-        self.layer1_proj = nn.Conv2d(128, 128, kernel_size=1)
+        self.layer1_proj = nn.Conv2d(256, 128, kernel_size=1)
 
         model = timm.create_model('resnet50', pretrained=True)
         return_layers = {"layer1": "1", "layer2": "2", "layer3": "3", "layer4": "4"}
@@ -98,13 +98,13 @@ class SETR(nn.Module):
         #x = self.transformer_encoder(x)
         #x = x.permute(1,2,0).view(-1,256,h//16,w//16)
 
-        """
+        
         b,_,h,w = x4.shape
         x4 = x4 + positionalencoding2d(256,h,w).unsqueeze(0).to('cuda')
         x4 = x4.flatten(2,3).permute(2,0,1)
         x4 = self.transformer_decoder(x4,x)
         x4 = x4.permute(1,2,0).view(-1,256,h,w)
-        """
+        
 
         #print(x.shape)
         x4 = self.head4(x4)
