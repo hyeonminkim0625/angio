@@ -2,7 +2,8 @@ import xdrlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torchvision.models._utils import IntermediateLayerGetter
+import timm
 from utils import positionalencoding2d
 
 class convblock(nn.Module):
@@ -47,9 +48,10 @@ class SETR(nn.Module):
     def __init__(self, embed_dim = 512, patch_size = 16):
         super(SETR, self).__init__()
         self.num_classes = 2
-        self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=12)
+        #self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
+        model = timm.create_model('vit_base_patch16_384', pretrained=True)
+        self.model =  IntermediateLayerGetter(model,return_layers={'norm':'0'})
+        #transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=12)
         self.decoder = Decoder()
         
         self.cls = nn.Conv2d(256,self.num_classes, 1, padding = 0)
@@ -59,12 +61,15 @@ class SETR(nn.Module):
 
     def forward(self, x):
         #batch channel h w
-        x = self.proj(x) + positionalencoding2d(512,32,32).unsqueeze(0).to('cuda')
-        x = x.flatten(2,3).permute(2,0,1)
-        x = self.transformer_encoder(x)
-        x = x.permute(1,2,0).view(-1,512,32,32)
+        #x = self.proj(x) + positionalencoding2d(512,32,32).unsqueeze(0).to('cuda')
+        #x = x.flatten(2,3).permute(2,0,1)
+        #x = self.transformer_encoder(x)
+        #x = x.permute(1,2,0).view(-1,512,32,32)
 
         #x = self.decoder_upscale(x)
+        b,_,h,w = x.shape
+        x = self.model(x)['0']
+        x = x.transpose(2,1).view(b,-1,h,w)
         x = self.decoder(x)
         x = self.cls(x)
         #x = self.upscale(x)
