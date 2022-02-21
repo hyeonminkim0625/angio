@@ -51,7 +51,7 @@ class Decoder(nn.Module):
         return x
 
 class SETR(nn.Module):
-    def __init__(self, embed_dim = 512, patch_size = 16):
+    def __init__(self, embed_dim = 256, patch_size = 16):
         super(SETR, self).__init__()
         self.num_classes = 2
         self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
@@ -104,7 +104,7 @@ class SETR(nn.Module):
         x4 = x4.permute(1,2,0).view(-1,256,h,w)
         
         x4 = self.head4(x4)
-        
+
         x3 = self.head3(torch.cat((x3,x4),dim=1))
         x2 = self.head2(torch.cat((x2,x3),dim=1))
         x1 = self.head1(torch.cat((x1,x2),dim=1))
