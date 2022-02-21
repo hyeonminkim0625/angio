@@ -94,8 +94,6 @@ class SETR(nn.Module):
         x = self.proj(x) + positionalencoding2d(256,h//16,w//16).unsqueeze(0).to('cuda')
         x = x.flatten(2,3).permute(2,0,1)
         x = self.transformer_encoder(x)
-        x = x.permute(1,2,0).view(-1,256,h//16,w//16)
-
         
         b,_,h,w = x4.shape
         x4 = x4 + positionalencoding2d(256,h,w).unsqueeze(0).to('cuda')
