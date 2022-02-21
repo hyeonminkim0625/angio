@@ -103,8 +103,8 @@ def train(args):
     model.to(device)
     criterion.to(device)
 
-    if args.wandb:
-        wandb.watch(model)
+    #if args.wandb:
+    #   wandb.watch(model)
     
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
     train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=24, batch_size=args.batch_size,shuffle=True,drop_last=False)
