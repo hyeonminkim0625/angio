@@ -68,8 +68,8 @@ class SETR(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(256,8)
         self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
 
-        decoder_layer = nn.TransformerDecoderLayer(256,8)
-        self.transformer_decoder = nn.TransformerEncoder(encoder_layer, num_layers=2)
+        #decoder_layer = nn.TransformerDecoderLayer(256,8)
+        #self.transformer_decoder = nn.TransformerEncoder(decoder_layer, num_layers=2)
 
         self.head4 = convblock(256,128)
         self.head3 = convblock(256,128)
@@ -98,14 +98,15 @@ class SETR(nn.Module):
         #x = self.transformer_encoder(x)
         #x = x.permute(1,2,0).view(-1,256,h//16,w//16)
 
-        
+        """
         b,_,h,w = x4.shape
         x4 = x4 + positionalencoding2d(256,h,w).unsqueeze(0).to('cuda')
         x4 = x4.flatten(2,3).permute(2,0,1)
         x4 = self.transformer_decoder(x4,x)
         x4 = x4.permute(1,2,0).view(-1,256,h,w)
+        """
+        #dfdf
         
-
         #print(x.shape)
         x4 = self.head4(x4)
         x3 = self.head3(torch.cat((x3,x4),dim=1))
