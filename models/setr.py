@@ -66,7 +66,7 @@ class SETR(nn.Module):
         self.backbone =  IntermediateLayerGetter(model,return_layers=return_layers)
 
         encoder_layer = nn.TransformerEncoderLayer(256,8)
-        self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
+        self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=3)
 
         self.transformer_decoder_4 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
         self.transformer_decoder_3 = nn.TransformerDecoder(nn.TransformerDecoderLayer(256,8), num_layers=2)
