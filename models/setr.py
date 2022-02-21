@@ -54,23 +54,30 @@ class SETR(nn.Module):
     def __init__(self, embed_dim = 512, patch_size = 16):
         super(SETR, self).__init__()
         self.num_classes = 2
-        #self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
-        self.input_proj = nn.Conv2d(1024, 512, kernel_size=1)
+        self.proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
+        self.layer4_proj = nn.Conv2d(2048, 256, kernel_size=1)
+        self.layer3_proj = nn.Conv2d(1024, 128, kernel_size=1)
+        self.layer2_proj = nn.Conv2d(512, 128, kernel_size=1)
+        self.layer1_proj = nn.Conv2d(128, 128, kernel_size=1)
+
         model = timm.create_model('resnet50', pretrained=True)
-        return_layers = {"layer1": "1", "layer2": "2", "layer3": "3"}
+        return_layers = {"layer1": "1", "layer2": "2", "layer3": "3", "layer4": "4"}
         #self.model =  IntermediateLayerGetter(model,return_layers={'patch_embed':'0','norm':'1'})
         self.backbone =  IntermediateLayerGetter(model,return_layers=return_layers)
 
-        encoder_layer = nn.TransformerEncoderLayer(512,8)
-        self.transformer= nn.TransformerEncoder(encoder_layer, num_layers=6)
+        encoder_layer = nn.TransformerEncoderLayer(256,8)
+        self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
 
+        decoder_layer = nn.TransformerDecoderLayer(256,8)
+        self.transformer_decoder = nn.TransformerEncoder(encoder_layer, num_layers=2)
+
+        self.head4 = convblock(256,128)
+        self.head3 = convblock(256,128)
+        self.head2 = convblock(256,128)
+        self.head1 = convblock(256,256)
         
-        self.head1 = convblock(512,256)
-        self.head2 = convblock(768,256)
-        self.head3 = convblock(512,256)
-        self.head4 = convblock(256,256)
-
-
+        
+        
         self.cls = nn.Conv2d(256, self.num_classes, 1, padding = 0)
         #self.decoder_upscale = nn.Upsample(scale_factor=4, mode='nearest')
 
@@ -78,30 +85,34 @@ class SETR(nn.Module):
 
     def forward(self, x):
         #batch channel h w
-        #x = self.proj(x) + positionalencoding2d(512,32,32).unsqueeze(0).to('cuda')
-        #x = x.flatten(2,3).permute(2,0,1)
-        #x = self.transformer_encoder(x)
-        #x = x.permute(1,2,0).view(-1,512,32,32)
-
-        #x = self.decoder_upscale(x)
-        
         
         xs = self.backbone(x)
+        x4 = self.layer4_proj(xs['4'])
+        x3 = self.layer3_proj(xs['3'])
+        x2 = self.layer2_proj(xs['2'])
+        x1 = self.layer1_proj(xs['1'])
 
-        xs['3'] = self.input_proj(xs['3'])
-        b,_,h,w = xs['3'].shape
+        #b,_,h,w = x.shape
+        #x = self.proj(x) + positionalencoding2d(256,h//16,w//16).unsqueeze(0).to('cuda')
+        #x = x.flatten(2,3).permute(2,0,1)
+        #x = self.transformer_encoder(x)
+        #x = x.permute(1,2,0).view(-1,256,h//16,w//16)
 
-        xs['3'] = xs['3'] + positionalencoding2d(512,h,w).unsqueeze(0).to('cuda')
-        xs['3'] = xs['3'].flatten(2,3).permute(2,0,1)
-        xs['3'] = self.transformer(xs['3'])
-        xs['3'] = xs['3'].permute(1,2,0).view(-1,512,h,w)
+        """
+        b,_,h,w = x4.shape
+        x4 = x4 + positionalencoding2d(256,h,w).unsqueeze(0).to('cuda')
+        x4 = x4.flatten(2,3).permute(2,0,1)
+        x4 = self.transformer_decoder(x4,x)
+        x4 = x4.permute(1,2,0).view(-1,256,h,w)
+        """
 
         #print(x.shape)
-        xs['3'] = self.head1(xs['3'])
-        xs['2'] = self.head2(torch.cat([xs['3'], xs['2']],dim=1))
-        xs['1'] = self.head3(torch.cat([xs['2'], xs['1']],dim=1))
-        xs['1'] = self.head4(xs['1'])
-        xs['1'] = self.cls(xs['1'])
+        x4 = self.head4(x4)
+        x3 = self.head3(torch.cat((x3,x4),dim=1))
+        x2 = self.head2(torch.cat((x2,x3),dim=1))
+        x1 = self.head1(torch.cat((x1,x2),dim=1))
+        x1 = self.cls(x1)
+
         #x = self.upscale(x)
         return {"out" : xs['1']}
 
