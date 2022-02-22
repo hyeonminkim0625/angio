@@ -8,7 +8,7 @@ class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
     def __init__(self,in_channel,out_channel,scale_factor):
         super(Decoder_revised, self).__init__()
-        self.upsample = nn.Upsample(scale_factor = 2, mode='nearest')
+        
         self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
