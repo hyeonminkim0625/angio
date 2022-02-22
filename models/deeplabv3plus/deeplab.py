@@ -25,7 +25,7 @@ class DeepLab(nn.Module):
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
         #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
         self.decoder1 = Decoder_revised(256+128,256,2)
-        #self.decoder2 = Decoder_revised(256+64,256,2)
+        self.decoder2 = Decoder_revised(256+64,256,2)
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
 
@@ -39,7 +39,7 @@ class DeepLab(nn.Module):
         x = self.aspp(torch.cat((x,x_,x__),dim=1))
         
         x = self.decoder1(x, low_level_feat)
-        #x = self.decoder2(x, low_level_feat_)
+        x = self.decoder2(x, low_level_feat_)
 
         x = self.cls(x)
         x = F.interpolate(x, size=input.size()[2:], mode='bilinear', align_corners=True)
