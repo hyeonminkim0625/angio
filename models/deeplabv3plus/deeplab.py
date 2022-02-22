@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from models.deeplabv3plus.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from models.deeplabv3plus.aspp import build_aspp
-from models.deeplabv3plus.decoder import build_decoder
+from models.deeplabv3plus.decoder import build_decoder, Decoder_revised
 from models.deeplabv3plus.backbone import build_backbone
 
 class DeepLab(nn.Module):
@@ -22,8 +22,9 @@ class DeepLab(nn.Module):
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
 
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
-        self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
+        #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
         #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
+        self.decoder = Decoder_revised(256+128,3,4)
 
         self.freeze_bn = freeze_bn
 
@@ -36,7 +37,7 @@ class DeepLab(nn.Module):
         x__ = F.interpolate(x__, size=x.size()[2:], mode='bilinear', align_corners=True)
         x = self.aspp(torch.cat((x,x_,x__),dim=1))
         
-        x = self.decoder1(x, low_level_feat)
+        x = self.decoder(x, low_level_feat)
         #x = self.decoder2(x, low_level_feat_)
         x = F.interpolate(x, size=input.size()[2:], mode='bilinear', align_corners=True)
 
