@@ -8,17 +8,17 @@ class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
     def __init__(self,in_channel,out_channel,scale_factor):
         super(Decoder_revised, self).__init__()
-        
         self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
-                                  nn.Dropout(0.3),
+                                  nn.Dropout(0.1),
                                   nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
-                                  nn.Dropout(0.3),
+                                  nn.Dropout(0.1),
                                   )
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
+
     def forward(self, x,low_feature):
         x = self.upsample(x)
         x = torch.cat((x,low_feature),dim=1)
