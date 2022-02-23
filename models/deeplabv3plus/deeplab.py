@@ -44,16 +44,16 @@ class DeepLab(nn.Module):
         x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
         #x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
 
-        #x3 = self.aspp(torch.cat((x3,x4),dim=1))
+        x3 = self.aspp(torch.cat((x3,x4),dim=1))
 
-        x3 = torch.cat((x3,x4),dim=1)
+        #x3 = torch.cat((x3,x4),dim=1)
 
-        b,d,h,w = x3.shape
-        x3 = x3 + positionalencoding2d(d,h,w).unsqueeze(0).to('cuda')
-        x3 = x3.flatten(2,3).permute(2,0,1)
-        x3 = self.transformer_encoder(x3)
-        x3 = x3.permute(1,2,0).view(b,d,h,w)
-        x3 = self.proj(x3)
+        #b,d,h,w = x3.shape
+        #x3 = x3 + positionalencoding2d(d,h,w).unsqueeze(0).to('cuda')
+        #x3 = x3.flatten(2,3).permute(2,0,1)
+        #x3 = self.transformer_encoder(x3)
+        #x3 = x3.permute(1,2,0).view(b,d,h,w)
+        #x3 = self.proj(x3)
         
         x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)
