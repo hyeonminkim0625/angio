@@ -19,12 +19,12 @@ class DeepLab(nn.Module):
             BatchNorm = nn.BatchNorm2d
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        self.aspp = build_aspp(backbone, 8, BatchNorm)
+        self.aspp = build_aspp(backbone, 16, BatchNorm)
 
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
         #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
-        #self.decoder1 = Decoder_revised(256+256,256,2)
+        self.decoder1 = Decoder_revised(256+256,256,2)
         self.decoder2 = Decoder_revised(256+128,256,2)
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
@@ -36,12 +36,12 @@ class DeepLab(nn.Module):
 
         x1,x2,x3,x4 = self.backbone(input)
         
-        x4 = F.interpolate(x4, size=x2.size()[2:], mode='bilinear', align_corners=True)
-        x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
+        x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
+        #x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
 
-        x2 = self.aspp(torch.cat((x2,x3,x4),dim=1))
+        x3 = self.aspp(torch.cat((x3,x4),dim=1))
         
-        #x2 = self.decoder1(x3, x2)
+        x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)
 
         x1 = self.cls(x1)
