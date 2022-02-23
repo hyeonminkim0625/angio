@@ -19,7 +19,7 @@ class DeepLab(nn.Module):
             BatchNorm = nn.BatchNorm2d
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        self.aspp = build_aspp(backbone, 16, BatchNorm)
+        self.aspp = build_aspp(backbone, 8, BatchNorm)
 
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
