@@ -21,9 +21,9 @@ class DeepLab(nn.Module):
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
         
-        #self.aspp = build_aspp(backbone, 16, BatchNorm)
-        encoder_layer = nn.TransformerEncoderLayer(1024+512,8)
-        self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
+        self.aspp = build_aspp(backbone, 16, BatchNorm)
+        #encoder_layer = nn.TransformerEncoderLayer(1024+512,8)
+        #self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
 
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
