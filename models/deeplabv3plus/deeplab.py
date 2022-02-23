@@ -32,19 +32,22 @@ class DeepLab(nn.Module):
     def forward(self, input):
         #x, low_level_feat = self.backbone(input)
         #low_level_feat_
-        low_level_feat_,low_level_feat,x,x_,x__ = self.backbone(input)
-        
-        x_ = F.interpolate(x_, size=x.size()[2:], mode='bilinear', align_corners=True)
-        x__ = F.interpolate(x__, size=x.size()[2:], mode='bilinear', align_corners=True)
-        x = self.aspp(torch.cat((x,x_,x__),dim=1))
-        
-        x = self.decoder1(x, low_level_feat)
-        x = self.decoder2(x, low_level_feat_)
+        #low_level_feat_,low_level_feat,x,x_,x__ = self.backbone(input)
 
-        x = self.cls(x)
-        x = F.interpolate(x, size=input.size()[2:], mode='bilinear', align_corners=True)
+        x1,x2,x3,x4 = self.backbone(input)
+        
+        x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
+        #x__ = F.interpolate(x__, size=x.size()[2:], mode='bilinear', align_corners=True)
 
-        return {'out':x}
+        x3 = self.aspp(torch.cat((x3,x4),dim=1))
+        
+        x2 = self.decoder1(x3, x2)
+        x1 = self.decoder2(x2, x1)
+
+        x1 = self.cls(x1)
+        x1 = F.interpolate(x1, size=input.size()[2:], mode='bilinear', align_corners=True)
+
+        return {'out':x1}
 
     def freeze_bn(self):
         for m in self.modules():
