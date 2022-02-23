@@ -28,10 +28,11 @@ class DeepLab(nn.Module):
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
         #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
-        self.decoder1 = Decoder_revised(256+256,256,2)
-        self.decoder2 = Decoder_revised(256+128,256,2)
-        self.proj = nn.Conv2d(1536, 256, 1, padding=0, bias=False)
-        self.cls = nn.Conv2d(256, 2, 1, padding = 0)
+        self.decoder1 = Decoder_revised(256+256,2)
+        self.decoder2 = Decoder_revised(256+128,2)
+        self.proj1 = nn.Conv2d(512, 256, 1, padding=0, bias=False)
+        #self.proj2 = nn.Conv2d(256+128, 256, 1, padding=0, bias=False)
+        self.cls = nn.Conv2d(256+128, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
 
     def forward(self, input):
@@ -56,6 +57,7 @@ class DeepLab(nn.Module):
         #x3 = self.proj(x3)
         
         x2 = self.decoder1(x3, x2)
+        x2 = self.proj1(x2)
         x1 = self.decoder2(x2, x1)
 
         x1 = self.cls(x1)
