@@ -30,6 +30,7 @@ class DeepLab(nn.Module):
         #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
         self.decoder1 = Decoder_revised(256+256,256,2)
         self.decoder2 = Decoder_revised(256+128,256,2)
+        self.proj = nn.Conv2d(1792, 256, 1, padding=0, bias=False),
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
 
@@ -46,13 +47,13 @@ class DeepLab(nn.Module):
         #x3 = self.aspp(torch.cat((x3,x4),dim=1))
 
         x3 = torch.cat((x3,x4),dim=1)
-        
+
         b,d,h,w = x3.shape
         x3 = x3 + positionalencoding2d(d,h,w).unsqueeze(0).to('cuda')
         x3 = x3.flatten(2,3).permute(2,0,1)
         x3 = self.transformer_encoder(x3)
         x3 = x3.permute(1,2,0).view(b,d,h,w)
-
+        x3 = self.proj(x3)
         
         x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)
