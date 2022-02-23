@@ -39,6 +39,8 @@ class DeepLab(nn.Module):
         x4 = F.interpolate(x4, size=x2.size()[2:], mode='bilinear', align_corners=True)
         x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
 
+        print(x2.shape)
+
         x2 = self.aspp(torch.cat((x2,x3,x4),dim=1))
         
         #x2 = self.decoder1(x3, x2)
