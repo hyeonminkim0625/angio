@@ -19,7 +19,7 @@ class DeepLab(nn.Module):
             BatchNorm = nn.BatchNorm2d
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        self.aspp = build_aspp(backbone, output_stride, BatchNorm)
+        self.aspp = build_aspp(backbone, 16, BatchNorm)
 
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
@@ -38,8 +38,6 @@ class DeepLab(nn.Module):
         
         x4 = F.interpolate(x4, size=x2.size()[2:], mode='bilinear', align_corners=True)
         x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
-
-        print(x2.shape)
 
         x2 = self.aspp(torch.cat((x2,x3,x4),dim=1))
         
