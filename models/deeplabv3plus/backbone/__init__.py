@@ -12,5 +12,7 @@ def build_backbone(backbone, output_stride, BatchNorm):
         return mobilenet.MobileNetV2(output_stride, BatchNorm)
     elif backbone == 'hrnet':
         return timm.create_model('hrnet_w64',features_only=True,pretrained=True, out_indices=(0,1,2,3,4))
+    elif backbone == 'convnext':
+        return timm.create_model('convnext_base_384_in22ft1k',features_only=True,pretrained=True, num_classes=0, global_pool='',drop_path_rate=0.1)
     else:
         raise NotImplementedError
