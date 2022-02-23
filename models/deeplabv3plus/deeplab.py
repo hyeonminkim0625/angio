@@ -6,6 +6,7 @@ from models.deeplabv3plus.sync_batchnorm.batchnorm import SynchronizedBatchNorm2
 from models.deeplabv3plus.aspp import build_aspp
 from models.deeplabv3plus.decoder import build_decoder, Decoder_revised
 from models.deeplabv3plus.backbone import build_backbone
+from utils import positionalencoding2d
 
 class DeepLab(nn.Module):
     def __init__(self, backbone='resnet', output_stride=16, num_classes=21,
@@ -19,7 +20,10 @@ class DeepLab(nn.Module):
             BatchNorm = nn.BatchNorm2d
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        self.aspp = build_aspp(backbone, 16, BatchNorm)
+        
+        #self.aspp = build_aspp(backbone, 16, BatchNorm)
+        encoder_layer = nn.TransformerEncoderLayer(1024+512,8)
+        self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
 
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
@@ -39,7 +43,16 @@ class DeepLab(nn.Module):
         x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
         #x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
 
-        x3 = self.aspp(torch.cat((x3,x4),dim=1))
+        #x3 = self.aspp(torch.cat((x3,x4),dim=1))
+
+        x3 = torch.cat((x3,x4),dim=1)
+        
+        b,d,h,w = x3.shape
+        x3 = x3 + positionalencoding2d(d,h,w).unsqueeze(0).to('cuda')
+        x3 = x3.flatten(2,3).permute(2,0,1)
+        x3 = self.transformer_encoder(x3)
+        x3 = x3.permute(1,2,0).view(b,d,h,w)
+
         
         x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)
