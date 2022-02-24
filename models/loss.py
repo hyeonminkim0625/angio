@@ -61,10 +61,10 @@ class Binary_Loss_wrapper(nn.Module):
         elif args.loss =="dicefocal":
             self.loss = DiceFocalLoss()
 
-    def forward(self, inputs, targets, weight_centerline=None):
+    def forward(self, inputs, targets):
         loss = 0
         for i in range(self.num_classes):
-            loss+=self.loss(inputs[:,i],targets[:,i],weight_centerline)
+            loss+=self.loss(inputs[:,i],targets[:,i])
         return loss
 
 class FocalLoss(nn.Module):
@@ -134,13 +134,13 @@ class DiceFocalLoss(nn.Module):
         super(DiceFocalLoss, self).__init__()
         self.focal_loss = FocalLoss(logits=False)
 
-    def forward(self, inputs, targets, smooth=1,weight_centerline=None):
+    def forward(self, inputs, targets, smooth=1):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
         inputs = F.sigmoid(inputs)       
         
         intersection = (inputs * targets).sum()
-        total = (inputs + targets)
+        #total = (inputs + targets)
         #if weight_centerline is not None:
         #    intersection = intersection*weight_centerline
         #    total = total * weight_centerline
