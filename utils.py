@@ -101,7 +101,7 @@ def draw_centerline_heatmap(f) :
     annotated_dot = np.zeros((512,512))
 
     for x,y in skelenton_points:
-        annotated_dot = gaussian_heatmap_re(annotated_dot,y,x)
+        annotated_dot = gaussian_heatmap_re(annotated_dot,y,x,0.3)
     
     annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
     annotated_dot = 255-annotated_dot
