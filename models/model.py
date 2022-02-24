@@ -8,10 +8,6 @@ import torchvision.transforms.functional as TF
 from models.setr import SETR
 from models.unet_plusplus import Nested_UNet
 from models.deeplabv3plus.deeplab import DeepLab
-from utils import positionalencoding2d
-"""
-https://github.com/niecongchong/HRNet-keras-semantic-segmentation/blob/master/model/seg_hrnet.py
-"""
 
 class BaseLine_wrapper(nn.Module):
     """
