@@ -216,7 +216,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
         target_dict = {"index": target}
         if self.args.centerline == 'centerline_distancemap':
             target_dict['index'] = target[:-1]
-            target_dict['center'] = target[-1]
+            target_dict['centerline_distancemap'] = target[-1]
         
         return img , target_dict, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
             

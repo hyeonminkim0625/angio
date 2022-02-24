@@ -64,7 +64,7 @@ class Binary_Loss_wrapper(nn.Module):
     def forward(self, inputs, targets, weight_centerline=None):
         loss = 0
         for i in range(self.num_classes):
-            loss+=self.loss(inputs[:,i],targets[:,i],weight_centerline[:,i] if weight_centerline is not None else None)
+            loss+=self.loss(inputs[:,i],targets[:,i],weight_centerline)
         return loss
 
 class FocalLoss(nn.Module):

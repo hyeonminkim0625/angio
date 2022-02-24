@@ -11,7 +11,6 @@ class _ASPPModule(nn.Module):
                                             stride=1, padding=padding, dilation=dilation, bias=False)
         self.bn = BatchNorm(planes)
         self.relu = nn.ReLU()
-
         self._init_weight()
 
     def forward(self, x):
@@ -41,7 +40,8 @@ class ASPP(nn.Module):
         elif backbone == 'hrnet':
             inplanes = 256+512+1024
         elif backbone == 'convnext':
-            inplanes = 512+1024
+            inplanes = 2304
+
         else:
             inplanes = 2048
         if output_stride == 16:

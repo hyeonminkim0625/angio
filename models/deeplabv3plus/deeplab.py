@@ -20,40 +20,44 @@ class DeepLab(nn.Module):
             BatchNorm = nn.BatchNorm2d
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        
-        #self.aspp = build_aspp(backbone, 16, BatchNorm)
-        encoder_layer = nn.TransformerEncoderLayer(1024+512,8)
-        self.transformer_encoder= nn.TransformerEncoder(encoder_layer, num_layers=6)
+        self.aspp = build_aspp(backbone, 16, BatchNorm)
 
-        #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
-        #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
-        #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
         self.decoder1 = Decoder_revised(256+256,256,2)
         self.decoder2 = Decoder_revised(256+128,256,2)
-        self.proj = nn.Conv2d(1536, 256, 1, padding=0, bias=False)
+        
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
+        self._init_weight()
+            
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
 
     def forward(self, input):
-        #x, low_level_feat = self.backbone(input)
-        #low_level_feat_
-        #low_level_feat_,low_level_feat,x,x_,x__ = self.backbone(input)
-
+        
         x1,x2,x3,x4 = self.backbone(input)
         
         x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
-        #x3 = F.interpolate(x3, size=x2.size()[2:], mode='bilinear', align_corners=True)
 
-        #x3 = self.aspp(torch.cat((x3,x4),dim=1))
+        x3 = self.aspp(torch.cat((x3,x4),dim=1))
 
+
+        """
         x3 = torch.cat((x3,x4),dim=1)
-
         b,d,h,w = x3.shape
         x3 = x3 + positionalencoding2d(d,h,w).unsqueeze(0).to('cuda')
         x3 = x3.flatten(2,3).permute(2,0,1)
         x3 = self.transformer_encoder(x3)
         x3 = x3.permute(1,2,0).view(b,d,h,w)
         x3 = self.proj(x3)
+        """
         
         x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)

@@ -21,6 +21,18 @@ class Decoder_revised(nn.Module):
                                   )
         
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
+        self._init_weight()
+            
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
 
     def forward(self, x,low_feature):
         x = self.upsample(x)

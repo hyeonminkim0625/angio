@@ -62,7 +62,6 @@ class SETR(nn.Module):
 
         model = timm.create_model('resnet50', pretrained=True)
         return_layers = {"layer1": "1", "layer2": "2", "layer3": "3", "layer4": "4"}
-        #self.model =  IntermediateLayerGetter(model,return_layers={'patch_embed':'0','norm':'1'})
         self.backbone =  IntermediateLayerGetter(model,return_layers=return_layers)
 
         encoder_layer = nn.TransformerEncoderLayer(256,8)
