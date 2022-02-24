@@ -5,7 +5,6 @@ import torchvision
 from collections import OrderedDict
 import torch.nn.functional as F
 import torchvision.transforms.functional as TF
-from models.convlstm import ConvLSTM
 from models.setr import SETR
 from models.unet_plusplus import Nested_UNet
 from models.deeplabv3plus.deeplab import DeepLab
@@ -13,18 +12,6 @@ from utils import positionalencoding2d
 """
 https://github.com/niecongchong/HRNet-keras-semantic-segmentation/blob/master/model/seg_hrnet.py
 """
-class Consistency_model_wrapper(nn.Module):
-    """Some Information about Consistdddddency_model_wrapper"""
-    def __init__(self,model):
-        super(Consistency_model_wrapper, self).__init__()
-        self.crop = torchvision.transforms.RandomCrop(256)
-        self.model = model
-
-    def forward(self, x):
-        i, j, h, w = torchvision.transforms.RandomCrop.get_params(x, output_size=(224, 224))
-        random_cropped_img = TF.resized_crop(x, i, j, h, w, 256)
-        
-        return [self.model(x), self.model(random_cropped_img),(i,j,h,w)]
 
 class BaseLine_wrapper(nn.Module):
     """
@@ -54,36 +41,6 @@ class BaseLine_wrapper(nn.Module):
         x = self.model(x)['out']
 
         return x
-
-class LSTM_wrapper(nn.Module):
-    """
-    deeplabv3_resnet_50
-    """
-    def __init__(self,args):
-        super(LSTM_wrapper, self).__init__()
-        self.model = None
-        self._model = args.model
-        channel = 3
-        if args.frame!=0:
-            channel = args.frame*2 + 1
-        _num_classes = args.num_classes
-        if self._model == "deeplab":
-            self.model = torchvision.models.segmentation.deeplabv3_resnet50(pretrained=False,num_classes=_num_classes)
-        elif self._model == "unet":
-            self.model = UNet(channel,_num_classes)
-        elif self._model == "fcn":
-            self.model = torchvision.models.segmentation.fcn_resnet50(pretrained=False,num_classes=_num_classes)
-        
-        self.convlstm = ConvLSTM(input_dim=3,hidden_dim=3,kernel_size=(3,3),num_layers=1,batch_first=False)
-
-    def forward(self, x):
-        temp = []
-        for support in x['support']:
-            temp.append(self.model(support)['out'])
-        temp.append(self.model(x['anchor'])['out'])
-        
-        layer_output_list, _ =self.convlstm(torch.stack(temp,dim=0))#T, B, C, H, W -> B, T, C, H, W
-        return layer_output_list[:,-1]
 
 class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=1, init_features=32):
@@ -125,57 +82,22 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
-        self.transformer_pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=128, nhead=4)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=6)
-        self.vision = nn.Upsample(scale_factor=2, mode='bilinear')
+        
 
     def forward(self, x):
         
         enc1 = self.encoder1(x)
-
-        """
-        enc1_ = self.transformer_pool(enc1) + positionalencoding2d(32,32,32).unsqueeze(0).to('cuda')
-        #batch dim seq -> seq batch dim
-        enc1_ = self.transformer_encoder(enc1_.flatten(2,3).permute(2,0,1))
-        enc1_ = enc1_.permute(1,2,0).view(-1,32,32,32)
-        """
-
         enc2 = self.encoder2(self.pool1(enc1))
-
-        """
-
-        enc2_ = self.transformer_pool(enc2) + positionalencoding2d(64,32,32).unsqueeze(0).to('cuda')
-        #batch dim seq -> seq batch dim
-        enc2_ = self.transformer_encoder(enc2_.flatten(2,3).permute(2,0,1))
-        enc2_ = enc2_.permute(1,2,0).view(-1,64,32,32)
-
-        """
-
         enc3 = self.encoder3(self.pool2(enc2))
-
-        enc3_ = self.transformer_pool(enc3) + positionalencoding2d(128,32,32).unsqueeze(0).to('cuda')
-        #batch dim seq -> seq batch dim
-        enc3_ = self.transformer_encoder(enc3_.flatten(2,3).permute(2,0,1))
-        enc3_ = enc3_.permute(1,2,0).view(-1,128,32,32)
-
         enc4 = self.encoder4(self.pool3(enc3))
-
         bottleneck = self.bottleneck(self.pool4(enc4))
-
-        """       
-        bottleneck = bottleneck + positionalencoding2d(512,16,16).unsqueeze(0).to('cuda')
-        #batch dim seq -> seq batch dim
-        bottleneck = self.transformer_encoder(bottleneck.flatten(2,3).permute(2,0,1))
-        bottleneck = bottleneck.permute(1,2,0).view(-1,512,16,16)
-        """
 
         #seq batch dim -> batch dim seq
         dec4 = self.upconv4(bottleneck)
         dec4 = torch.cat((dec4, enc4), dim=1)
         dec4 = self.decoder4(dec4)
         dec3 = self.upconv3(dec4)
-        dec3 = torch.cat((dec3, self.vision(enc3_)), dim=1)
+        dec3 = torch.cat((dec3, enc3), dim=1)
         dec3 = self.decoder3(dec3)
         dec2 = self.upconv2(dec3)
         dec2 = torch.cat((dec2, enc2), dim=1)

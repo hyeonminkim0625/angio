@@ -45,7 +45,8 @@ def get_args_parser():
     parser.add_argument('--model',default="unet",type=str)
     parser.add_argument('--num_classes',default=2, type=int)
     parser.add_argument('--weight_dir', default='./weight', help='path where to save, empty for no saving')
-    parser.add_argument('--centerline', default=False, type=bool)
+    parser.add_argument('--centerline', default='centerline_distancemap', type=str)
+    parser.add_argument('--scheduler', default='step', type=str)
     
     
     #eval
@@ -63,14 +64,20 @@ def get_args_parser():
 def train(args):
     print(args)
     
+    """
+    model
+    """
     model = None
-
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'fcn' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus" or args.model == "setr":
         model = BaseLine_wrapper(args)
     else:
         print("model input error")
         exit()
 
+
+    """
+    loss func
+    """
     criterion = None
     if args.loss == 'crossentropy' or args.loss == 'dicecrossentropy':
         criterion = Loss_wrapper(args)
@@ -89,6 +96,10 @@ def train(args):
 
     optimizer = None
     base_opt = None
+
+    """
+    optim
+    """
     if args.opt == 'rll':
         base_opt=rl.Ralamb(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         optimizer = rl.Lookahead(base_opt,alpha=0.5,k=5)
@@ -97,24 +108,25 @@ def train(args):
     elif args.opt == 'radam':
         optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     
-    
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
-    #cheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=scheduler)
+    if args.scheduler == 'step':
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
+    elif args.scheduler=='cosineannealing':
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
+
     model.to(device)
     criterion.to(device)
 
-    #if args.wandb:
-    #   wandb.watch(model)
+    drop = True if args.batch_size==8 else False
     
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=24, batch_size=args.batch_size,shuffle=True,drop_last=True)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=drop)
 
     val_dataset = Angio_Dataset(args.num_classes,mode = "val",args=args)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=24, batch_size=args.batch_size,shuffle=False,drop_last=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=drop)
 
     for i in range(args.epochs):
         
-        train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
+        train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args, scheduler if args.scheduler=='cosineannealing' else None)
 
         if (i+1)%args.valperepoch==0:
             evaluate(model, criterion, val_dataloader ,device , args)
@@ -128,8 +140,9 @@ def train(args):
                 weight_dict['base_optimizer_state_dict'] = base_opt.state_dict()
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
-            
-        scheduler.step()
+        
+        if args.scheduler=='step':
+            scheduler.step()
 
 def eval(args):
     model = None
@@ -181,60 +194,20 @@ if __name__ == '__main__':
     #torch.backends.cudnn.deterministic = True
     #torch.backends.cudnn.benchmark = False
    
-
-    if args.wandb:
-        wandb.init(project='angio_'+args.model+'_'+args.mode)
     if args.output_dir:
         if args.eval:
             Path(args.output_dir+'_'+args.model+'_'+args.mode).mkdir(parents=True, exist_ok=True)
             Path(args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample').mkdir(parents=True, exist_ok=True)
         else:
             for i in range(100):
-                #if args.wandb:
-                    #args.model = wandb.config['model']
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
-                    #wandb.config['weight_dir']  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
+    if args.wandb:
+        wandb.init(project='angio_'+args.model+'_'+args.mode)
+        wandb.config.update(args)
     if args.eval:
         eval(args)
-    else:
-        """
-        wandb.config['multigpu']=True
-        wandb.config['num_classes']=2
-        wandb.config['output_dir']='.'
-        wandb.config['mode']='train'
-        wandb.config['mask_argmax']=True
-        wandb.config['eval']=False
-        wandb.config['weight_path']='/'
-        wandb.config['saveallfig']=False
-        wandb.config['onlymask']=False
-        wandb.config['report_hard_sample']=0
-        wandb.config['wandb']=True
-        """
-        
+    else:        
         train(args)
-"""
-보류
-"""
-def run(gpu, ngpus_per_node ,args):
-
-    dist.init_process_group(backend="gloo",rank=gpu,world_size=ngpus_per_node)
-
-    model = BaseLine_model(False, args.num_classes)
-    criterion = Loss_wrapper(args)
-
-    
-    model = model.to(gpu)
-    ddp_model = DistributedDataParallel(model,device_ids=[gpu])
-    optimizer = torch.optim.AdamW(ddp_model.parameters(), lr = args.lr)
-    criterion.to(gpu)
-
-    dataset = IVUS_Dataset(args.num_classes)
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-    dataloader = torch.utils.data.DataLoader(dataset,batch_sampler = sampler,  batch_size=args.batch_size)
-
-    for i in range(100):
-        train_one_epoch(model, criterion, dataloader , optimizer ,gpu , i)
-        evaluate(model, criterion, dataloader ,gpu , i)

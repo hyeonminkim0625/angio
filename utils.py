@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import torch
 import math
+from skimage import morphology
 
 def histogram_eq(img):
     hist, bins = np.histogram(img.flatten(), 256,[0,256])
@@ -91,3 +92,18 @@ def positionalencoding2d(d_model, height, width):
     pe[d_model + 1::2, :, :] = torch.cos(pos_h * div_term).transpose(0, 1).unsqueeze(2).repeat(1, 1, width)
 
     return pe
+
+def draw_centerline_heatmap(f) :
+    img = cv2.imread(f,cv2.IMREAD_GRAYSCALE)
+    skeleton0 = morphology.skeletonize(img)
+    
+    skelenton_points = np.argwhere(skeleton0==True)
+    annotated_dot = np.zeros((512,512))
+
+    for x,y in skelenton_points:
+        annotated_dot = gaussian_heatmap_re(annotated_dot,y,x)
+    
+    annotated_dot = (annotated_dot / np.max(annotated_dot) * 255).astype(np.uint8)
+    annotated_dot = 255-annotated_dot
+
+    return annotated_dot

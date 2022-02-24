@@ -22,7 +22,7 @@ from models.loss import centerline_loss_fn, vector_loss
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, args):
+                    device: torch.device, args, scheduler):
     
     model.train()
     criterion.train()
@@ -40,19 +40,15 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
-
-        """
-        if 'center' in targets.keys():
-            loss += centerline_loss_fn(targets_center,outputs,targets_index)
-        if 'coord' in targets.keys():
-            loss += vector_loss(targets_coord,outputs,targets_index)
-        """
+        
         total_loss += float(loss)
 
         optimizer.zero_grad()
         loss.backward()
-
         optimizer.step()
+
+        if scheduler is not None:
+            scheduler.step()
     
     total_loss = total_loss/(batch_num*args.batch_size)
     if args.wandb:
@@ -74,15 +70,12 @@ def evaluate(model, criterion, data_loader, device, args):
         samples = samples.to(device)
 
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
-        if 'center' in targets.keys():
-            targets_center = torch.stack([s.to(device) for s in targets["center"]],dim=0)
+        if 'centerline_distancemap' in targets.keys():
+            targets_center = torch.stack([s.to(device) for s in targets["centerline_distancemap"]],dim=0)
         
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
-        """
-        if 'center' in targets.keys():
-            loss += centerline_loss_fn(targets_center,outputs,targets_index)
-        """    
+         
         total_loss += float(loss)
 
         num_classes = outputs.shape[1]
@@ -140,14 +133,22 @@ def evaluate(model, criterion, data_loader, device, args):
                 """
                 prediction mask
                 """
-                #saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask[1:],colors=[(255,0,51),(102,255,102)])
-                #torchvision.utils.save_image(saveimg/255.0 ,pred_file_name)
+                if torch.__version__ != '1.8.1+cu101' :
+                    """
+                    not support '1.8.1+cu101'
+                    """
+                    saveimg = torchvision.utils.draw_segmentation_masks(img,output_mask[1:],colors=[(255,0,51),(102,255,102)])
+                    torchvision.utils.save_image(saveimg/255.0 ,pred_file_name)
 
                 """
                 target mask
                 """
-                #saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask[1:],colors=[(255,0,51),(102,255,102)])
-                #torchvision.utils.save_image(saveimg/255.0 , target_file_name)
+                if torch.__version__ != '1.8.1+cu101' :
+                    """
+                    not support '1.8.1+cu101'
+                    """
+                    saveimg = torchvision.utils.draw_segmentation_masks(img,target_mask[1:],colors=[(255,0,51),(102,255,102)])
+                    torchvision.utils.save_image(saveimg/255.0 , target_file_name)
 
                 """
                 save
@@ -173,9 +174,14 @@ def evaluate(model, criterion, data_loader, device, args):
 
                 pred_file_name = args.output_dir+'_'+args.model+'_'+args.mode+'/'+j['path']+'_pred.png'
                 target_file_name =  args.output_dir+'_'+args.model+'_'+args.mode+'/'+j['path']+'_target.png'
+                
+                if torch.__version__ != '1.8.1+cu101' :
+                    """
+                    not support '1.8.1+cu101'
+                    """
+                    copyfile(pred_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.png')
+                    copyfile(target_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.png')
 
-                #copyfile(pred_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.png')
-                #copyfile(target_file_name,args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.png')
                 copyfile(pred_file_name.replace('png','npy'),args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_pred.npy')
                 copyfile(target_file_name.replace('png','npy'),args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample/'+j['path']+'_target.npy')
                 copyfile(args.output_dir+'_'+args.model+'_'+args.mode+"/"+j['path']+".jpg",args.output_dir+'_'+args.model+'_'+args.mode+"/hard_sample/"+j['path']+".jpg")

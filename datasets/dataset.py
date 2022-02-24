@@ -14,7 +14,7 @@ import csv
 import pdb
 import pandas as pd
 from tqdm import tqdm
-from utils import histogram_eq, gaussian_heatmap_re, draw_centerline
+from utils import histogram_eq, gaussian_heatmap_re, draw_centerline, draw_centerline_heatmap
 from pathlib import Path
 
 
@@ -44,6 +44,10 @@ class Angio_Dataset(torch.utils.data.Dataset):
                         '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],
                         (i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2']),
                         i[1]['origin'].split('-')[1].split('.')[0]]
+
+                        """
+                        make heatmap
+                        """
                         if not os.path.exists("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy'):
                             x1, y1, x2, y2 = temp[2]
                             annotated_dot = np.zeros((512,512))
@@ -54,9 +58,18 @@ class Angio_Dataset(torch.utils.data.Dataset):
                             annotated_dot = 255-annotated_dot
                             np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
 
+                        """
+                        make centerline
+                        """
                         if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
                             centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
                             cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
+                        """
+                        make centerline heatmap
+                        """
+                        if not os.path.exists("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                            centerline_heatmap = draw_centerline_heatmap('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
+                            cv2.imwrite("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_heatmap)
                         img_list.append(temp)
 
             self.image_path = img_list
@@ -71,6 +84,10 @@ class Angio_Dataset(torch.utils.data.Dataset):
                         '/data/angiosegmentation/mask_correct/'+i[1]['segmentation'],
                         (i[1]['x1'], i[1]['y1'], i[1]['x2'], i[1]['y2']),
                         i[1]['origin'].split('-')[1].split('.')[0]]
+
+                        """
+                        make heatmap
+                        """
                         if not os.path.exists("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy'):
                             x1, y1, x2, y2 = temp[2]
                             annotated_dot = np.zeros((512,512))
@@ -81,10 +98,22 @@ class Angio_Dataset(torch.utils.data.Dataset):
                             annotated_dot = 255-annotated_dot
                             np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
 
+                        """
+                        make centerline
+                        """
                         if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
                             centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
                             cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
-                        
+
+
+                        """
+                        make centerline heatmap
+                        """
+                        if not os.path.exists("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                            centerline_heatmap = draw_centerline_heatmap('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
+                            cv2.imwrite("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_heatmap)
+
+
                         img_list.append(temp)                
                   
             self.image_path = img_list
@@ -123,8 +152,8 @@ class Angio_Dataset(torch.utils.data.Dataset):
         
         img = img_load(image_path)
 
-        if self.args.centerline:
-            centerline = cv2.imread("/data/angiosegmentation/centerline/"+self.image_path[index][3]+'.png')
+        if self.args.centerline == 'centerline_distancemap':
+            centerline = cv2.imread("/data/angiosegmentation/centerline_distancemap/"+self.image_path[index][3]+'.png')
             centerline = cv2.cvtColor(centerline, cv2.COLOR_BGR2GRAY)
             target = np.zeros((h,w,self.num_classes+1))
             target[:,:,-1] = centerline
@@ -138,6 +167,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
         if self.args.histogram_eq:
             img[:,:,1] = histogram_eq(img[:,:,1])
 
+        """
+        add point info
+        """
         if self.args.withcoordinate=='concat_filter':
             x1, y1, x2, y2 = self.image_path[index][2]
             annotated_dot = np.zeros((512,512))
@@ -168,6 +200,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
             no use
             """
             pass
+
         if self.mode == "train":
             transformed = self.transform(image=img, mask=target)
             target = TF.to_tensor(transformed['mask'])
@@ -181,15 +214,11 @@ class Angio_Dataset(torch.utils.data.Dataset):
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
 
         target_dict = {"index": target}
-        if self.args.centerline:
+        if self.args.centerline == 'centerline_distancemap':
             target_dict['index'] = target[:-1]
             target_dict['center'] = target[-1]
-        #if self.args.vectorloss:
-        #    target_dict['coord'] = torch.tensor(self.image_path[index][2])
         
         return img , target_dict, image_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]
-       
-        #reage_path.split('/')[4].split('-')[1].split('.')[0].split('_')[0]turn img target patient num
             
 
     def __len__(self):

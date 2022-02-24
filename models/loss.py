@@ -30,69 +30,13 @@ def centerline_loss_fn(centerlines,logit,label) :
             outside_ratios.append(0)
     return torch.mean(torch.tensor(outside_ratios,dtype=torch.float32))
 
-def vector_loss(ref_coord,logit,label):
-    b,_,h,w = label.shape
-    counts = []
-    predict_index = torch.argmax(logit,dim=1)
-    predict_index[label[:,1]==1] = 0
-    outside_ratios = []
-    #batch len 2
-
-    ref_coord
-
-    for i in range(b) :
-
-        predict_dist = torch.stack(torch.where(predict_index[i]>0.5),dim=1).to(dtype=torch.float32)
-        #len1 2
-        if len(predict_dist) < 6000 and len(predict_dist)>0:
-            center_dist = torch.stack(torch.where(centerlines[i]>0.5),dim=1).to(dtype=torch.float32)
-            #len2 2
-            res = torch.cdist(predict_dist,center_dist)
-            #len1 len2
-            res = torch.min(res,dim=1)[0]
-            filtered_res = res[res>12]
-            outside_ratios.append(len(filtered_res)/(len(res)+1)*0.5)
-        else :
-            outside_ratios.append(0)
-    return torch.mean(torch.tensor(outside_ratios,dtype=torch.float32))
-"""
-loss function for binary classification
-"""
-class Consistency_loss_wrapper(nn.Module):
-    """Some Information about Consistency_loss_wrapper"""
-    def __init__(self,args):
-        super(Consistency_loss_wrapper, self).__init__()
-        if args.loss == 'crossentropy':
-            self.lossfun = Binary_Loss_wrapper(args)
-        elif args.loss == "focal":
-            self.lossfun = FocalLoss(logits=True)
-        elif args.loss =="dicefocal":
-            self.lossfun = DiceFocalLoss()
-        else:
-            print('error')
-            exit()
-        self.consistency_loss = nn.MSELoss()
-        
-    def forward(self, pred, targets):
-        x,aug_x,coordinate = pred
-        i,j,h,w = coordinate
-        loss = 0
-
-        loss += self.lossfun(x,targets)
-        aug_targets = TF.resized_crop(targets, i, j, h, w, 256)
-        loss += self.lossfun(aug_x,aug_targets)
-        x = TF.resized_crop(x, i, j, h, w, 256)
-        loss += self.consistency_loss(x,aug_x)
-        
-        return loss
-
 class Loss_wrapper(nn.Module):
     
     def __init__(self,args):
         super(Loss_wrapper, self).__init__()
         self.lossfun = None
         self.args = args
-        weight = torch.ones((2),device='cuda')
+        weight = torch.ones((args.num_classes),device='cuda')
         weight[1]*=args.classweight
         if args.loss == 'crossentropy':
             self.lossfun = nn.CrossEntropyLoss(weight=weight)
@@ -100,14 +44,11 @@ class Loss_wrapper(nn.Module):
             self.lossfun = nn.CrossEntropyLoss(weight=weight)
             self.dicelossfun = DiceLoss()
 
-    def forward(self, pred, target):
-        #if torch.__version__ != '1.10.1':
+    def forward(self, pred, target, weight_centerline=None):
         target = torch.argmax(target,dim=1)
-        #else:
-        #target = target.to(dtype=torch.float32)
         loss = self.lossfun(pred,target)
         if self.args.loss == 'dicecrossentropy':
-            loss+=self.dicelossfun(pred,target)
+            loss+=self.dicelossfun(pred,target,weight_centerline)
         return loss
 
 class Binary_Loss_wrapper(nn.Module):
@@ -120,10 +61,10 @@ class Binary_Loss_wrapper(nn.Module):
         elif args.loss =="dicefocal":
             self.loss = DiceFocalLoss()
 
-    def forward(self, inputs, targets):
+    def forward(self, inputs, targets, weight_centerline=None):
         loss = 0
         for i in range(self.num_classes):
-            loss+=self.loss(inputs[:,i],targets[:,i])
+            loss+=self.loss(inputs[:,i],targets[:,i],weight_centerline[:,i] if weight_centerline is not None else None)
         return loss
 
 class FocalLoss(nn.Module):
@@ -151,13 +92,20 @@ class DiceLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(DiceLoss, self).__init__()
 
-    def forward(self, inputs, targets, smooth=1):
+    def forward(self, inputs, targets, smooth=1,weight_centerline=None):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
-        inputs = F.sigmoid(inputs)       
-        intersection = (inputs * targets).sum()
-        total = (inputs + targets).sum()
-        union = total - intersection
+        
+            
+        inputs = F.sigmoid(inputs)
+        intersection = (inputs * targets)
+        total = (inputs + targets)
+        if weight_centerline is not None:
+            intersection = intersection*weight_centerline
+            total = total * weight_centerline
+        
+        intersection=intersection.sum()
+        total=total.sum()
         
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
 
@@ -186,13 +134,22 @@ class DiceFocalLoss(nn.Module):
         super(DiceFocalLoss, self).__init__()
         self.focal_loss = FocalLoss(logits=False)
 
-    def forward(self, inputs, targets, smooth=1):
+    def forward(self, inputs, targets, smooth=1,weight_centerline=None):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
         inputs = F.sigmoid(inputs)       
         
-        intersection = (inputs * targets).sum()                            
+        intersection = (inputs * targets)
+        total = (inputs + targets)
+        if weight_centerline is not None:
+            intersection = intersection*weight_centerline
+            total = total * weight_centerline
+        
+        intersection=intersection.sum()
+        total=total.sum()
+        
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
+
         BCE = self.focal_loss(inputs, targets)
         Dice_BCE = BCE + dice_loss
         
