@@ -63,6 +63,7 @@ class Binary_Loss_wrapper(nn.Module):
 
     def forward(self, inputs, targets):
         loss = 0
+        targets = targets.to(dtype=torch.float32)
         for i in range(self.num_classes):
             loss+=self.loss(inputs[:,i],targets[:,i])
         return loss
