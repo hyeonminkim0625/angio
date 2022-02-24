@@ -35,7 +35,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
             targets_centerline_distancemap = torch.stack([s.to(device) for s in targets["centerline_distancemap"]],dim=0)
 
         outputs = model(samples)
-        loss = criterion(outputs, targets_index,targets_centerline_distancemap)
+        loss = criterion(outputs, targets_index)
         
         total_loss += float(loss)
 
