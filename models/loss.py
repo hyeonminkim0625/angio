@@ -139,14 +139,14 @@ class DiceFocalLoss(nn.Module):
         #comment out if your model contains a sigmoid or equivalent activation layer
         inputs = F.sigmoid(inputs)       
         
-        intersection = (inputs * targets)
+        intersection = (inputs * targets).sum()
         total = (inputs + targets)
-        if weight_centerline is not None:
-            intersection = intersection*weight_centerline
-            total = total * weight_centerline
+        #if weight_centerline is not None:
+        #    intersection = intersection*weight_centerline
+        #    total = total * weight_centerline
         
-        intersection=intersection.sum()
-        total=total.sum()
+        #intersection=intersection.sum()
+        #total=total.sum()
         
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
 
