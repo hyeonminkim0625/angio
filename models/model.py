@@ -36,7 +36,7 @@ class BaseLine_wrapper(nn.Module):
         elif self._model == "setr":
             self.model = SETR()
         elif args.model == 'deeplabv3plus':
-            self.model = DeepLab(backbone='convnext', output_stride=8, num_classes=_num_classes,sync_bn=False, freeze_bn=False)
+            self.model = DeepLab(backbone='convnext', output_stride=16, num_classes=_num_classes,sync_bn=False, freeze_bn=False)
     def forward(self, x):
         x = self.model(x)['out']
 

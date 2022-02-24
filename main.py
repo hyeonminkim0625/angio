@@ -20,7 +20,6 @@ import numpy as np
 import random
 import torch_optimizer as optim
 from optimizer import radam_lookahead as rl
-from warmup_scheduler import GradualWarmupScheduler
 
 
 def get_args_parser():
