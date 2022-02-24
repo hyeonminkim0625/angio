@@ -67,7 +67,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
                         """
                         make centerline heatmap
                         """
-                        if not os.path.exists("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                        if self.args.centerline == 'centerline_distancemap' and not os.path.exists("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
                             centerline_heatmap = draw_centerline_heatmap('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
                             cv2.imwrite("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_heatmap)
                         img_list.append(temp)
@@ -109,7 +109,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
                         """
                         make centerline heatmap
                         """
-                        if not os.path.exists("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                        if self.args.centerline == 'centerline_distancemap' and not os.path.exists("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
                             centerline_heatmap = draw_centerline_heatmap('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
                             cv2.imwrite("/data/angiosegmentation/centerline_heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_heatmap)
 
