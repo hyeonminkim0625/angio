@@ -18,12 +18,12 @@ class DeepLab(nn.Module):
             BatchNorm = SynchronizedBatchNorm2d
         else:
             BatchNorm = nn.BatchNorm2d
-            
+
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
         self.aspp = build_aspp(backbone, 16, BatchNorm)
-        self.decoder1 = Decoder_revised(256+256,256,2)
-        self.decoder2 = Decoder_revised(256+128,256,2)
+        self.decoder1 = Decoder_revised(256+384,256,2)
+        self.decoder2 = Decoder_revised(256+192,256,2)
         
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
