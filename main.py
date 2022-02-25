@@ -26,6 +26,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
     #train
     parser.add_argument('--lr', default=1e-3, type=float)
+    parser.add_argument('--lr_backbone', default=1e-3, type=float)
     parser.add_argument('--batch_size', default=32, type=int )
     parser.add_argument('--weight_decay', default=1e-2, type=float)
     parser.add_argument('--epochs', default=300, type=int)
@@ -86,31 +87,53 @@ def train(args):
         print("loss input error")
         exit()
     
+    
+
+    optimizer = None
+    base_opt = None
+    param_dicts = None
+    """
+    optim
+    """
+    if args.model == 'deeplabv3plus':
+        param_dicts = [
+        {"params": [p for n, p in model.named_parameters() if "backbone" not in n and p.requires_grad]},
+        {
+            "params": [p for n, p in model.named_parameters() if "backbone" in n and p.requires_grad],
+            "lr": args.lr_backbone,
+        },
+    ]
+    print(param_dicts)
+    exit()
+
+    if args.opt == 'rll':
+        if args.model == 'deeplabv3plus':
+            base_opt=rl.Ralamb(param_dicts,lr=args.lr,weight_decay=args.weight_decay)
+        else:
+            base_opt=rl.Ralamb(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
+        optimizer = rl.Lookahead(base_opt,alpha=0.5,k=5)
+    elif args.opt == 'adamw':
+        if args.model == 'deeplabv3plus':
+            optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+        else:
+            optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+    elif args.opt == 'radam':
+        if args.model == 'deeplabv3plus':
+            optimizer = optim.RAdam(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+        else:
+            optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+    
+    if args.scheduler == 'step':
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
+    elif args.scheduler=='cosineannealing':
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
+    
     if args.multigpu:
         model = nn.DataParallel(model)
     else:
         os.environ["CUDA_VISIBLE_DEVICES"]= args.rank
 
     device = torch.device("cuda")
-
-    optimizer = None
-    base_opt = None
-
-    """
-    optim
-    """
-    if args.opt == 'rll':
-        base_opt=rl.Ralamb(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
-        optimizer = rl.Lookahead(base_opt,alpha=0.5,k=5)
-    elif args.opt == 'adamw':
-        optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
-    elif args.opt == 'radam':
-        optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
-    
-    if args.scheduler == 'step':
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
-    elif args.scheduler=='cosineannealing':
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
     #
     model.to(device)
     criterion.to(device)
