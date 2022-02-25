@@ -103,7 +103,7 @@ def train(args):
             "lr": args.lr_backbone,
         },
     ]
-    print(param_dicts)
+    print(param_dicts[1])
     exit()
 
     if args.opt == 'rll':
