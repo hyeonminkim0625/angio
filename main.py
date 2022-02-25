@@ -95,7 +95,7 @@ def train(args):
     """
     optim
     """
-    if args.model == 'deeplabv3plus':
+    if args.lr_backbone < 0.0:
         param_dicts = [
         {"params": [p for n, p in model.named_parameters() if "backbone" not in n and p.requires_grad]},
         {
@@ -103,20 +103,20 @@ def train(args):
             "lr": args.lr_backbone,
         },
     ]
-    
+
     if args.opt == 'rll':
-        if args.model == 'deeplabv3plus':
+        if args.lr_backbone < 0.0:
             base_opt=rl.Ralamb(param_dicts,lr=args.lr,weight_decay=args.weight_decay)
         else:
             base_opt=rl.Ralamb(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         optimizer = rl.Lookahead(base_opt,alpha=0.5,k=5)
     elif args.opt == 'adamw':
-        if args.model == 'deeplabv3plus':
+        if args.lr_backbone < 0.0:
             optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     elif args.opt == 'radam':
-        if args.model == 'deeplabv3plus':
+        if args.lr_backbone < 0.0:
             optimizer = optim.RAdam(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
         else:
             optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)

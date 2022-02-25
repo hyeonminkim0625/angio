@@ -7,10 +7,14 @@ from functools import partial
 
 class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
-    def __init__(self,in_channel,out_channel,scale_factor):
+    def __init__(self,low_in_channel,high_in_channel,out_channel,scale_factor):
         super(Decoder_revised, self).__init__()
         
-        self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
+        self.proj = nn.Sequential(nn.Conv2d(low_in_channel, 64, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(num_features = 64),
+                                  nn.ReLU(),
+                                  )
+        self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
                                   nn.Dropout(0.1),
@@ -35,6 +39,7 @@ class Decoder_revised(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, x,low_feature):
+        low_feature = self.proj(low_feature)
         x = self.upsample(x)
         x = torch.cat((x,low_feature),dim=1)
         x = self.head(x)
