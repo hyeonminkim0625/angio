@@ -103,9 +103,7 @@ def train(args):
             "lr": args.lr_backbone,
         },
     ]
-    print(param_dicts[1])
-    exit()
-
+    
     if args.opt == 'rll':
         if args.model == 'deeplabv3plus':
             base_opt=rl.Ralamb(param_dicts,lr=args.lr,weight_decay=args.weight_decay)
