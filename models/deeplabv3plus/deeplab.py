@@ -9,7 +9,7 @@ from models.deeplabv3plus.backbone import build_backbone
 from utils import positionalencoding2d
 
 class DeepLab(nn.Module):
-    def __init__(self, backbone='resnet', output_stride=16, num_classes=21,
+    def __init__(self,args, backbone='resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
         super(DeepLab, self).__init__()
         if backbone == 'drn':
@@ -19,7 +19,7 @@ class DeepLab(nn.Module):
         else:
             BatchNorm = nn.BatchNorm2d
 
-
+        self.aux = args.aux
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
         self.aspp = build_aspp(backbone, 16, BatchNorm)
         self.decoder1 = Decoder_revised(384,256,256,2)
@@ -61,11 +61,14 @@ class DeepLab(nn.Module):
         
         x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)
-
+        
         x1 = self.cls(x1)
         x1 = F.interpolate(x1, size=input.size()[2:], mode='bilinear', align_corners=True)
-
-        return {'out':x1}
+        if self.aux>0:
+            x2 = self.cls(x2)
+            x2 = F.interpolate(x2, size=input.size()[2:], mode='bilinear', align_corners=True)
+            x1 = (x1+x2*self.aux)/(1+self.aux)
+        return {'out': x1}
 
     def freeze_bn(self):
         for m in self.modules():

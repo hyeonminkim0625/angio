@@ -47,6 +47,7 @@ def get_args_parser():
     parser.add_argument('--weight_dir', default='./weight', help='path where to save, empty for no saving')
     parser.add_argument('--centerline', default='centerline_distancemap', type=str)
     parser.add_argument('--scheduler', default='step', type=str)
+    parser.add_argument('--aux', default=-1.0, type=float)
     
     
     #eval
@@ -123,6 +124,8 @@ def train(args):
     
     if args.scheduler == 'step':
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
+    elif args.scheduler == 'multistep':
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50,80], gamma=0.1)
     elif args.scheduler=='cosineannealing':
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
     else:
@@ -164,7 +167,7 @@ def train(args):
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
         
-        if args.scheduler=='step':
+        if args.scheduler!='cosineannealing':
             scheduler.step()
 
 def eval(args):
