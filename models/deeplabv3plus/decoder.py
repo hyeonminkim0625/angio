@@ -45,10 +45,10 @@ class Decoder_revised(nn.Module):
         super(Decoder_revised, self).__init__()
         
         low_hw = 64 if low_in_channel ==384 else 128
-        self.proj = InvertedBottleneck(low_in_channel,64,4,low_hw)
+        self.proj = InvertedBottleneck(low_in_channel,64,2,low_hw)
         self.head = nn.Sequential(
-            InvertedBottleneck(64+high_in_channel,out_channel,4,low_hw),
-            InvertedBottleneck(out_channel,out_channel,4,low_hw),
+            InvertedBottleneck(64+high_in_channel,out_channel,2,low_hw),
+            InvertedBottleneck(out_channel,out_channel,2,low_hw),
         )
         """
         nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 3, padding=1, bias=False),
