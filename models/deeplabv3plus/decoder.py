@@ -11,15 +11,15 @@ class Decoder_revised(nn.Module):
         super(Decoder_revised, self).__init__()
         
         self.proj = nn.Sequential(nn.Conv2d(low_in_channel, 64, 3, padding=1, bias=False),
-                                  nn.LayerNorm(num_features = 64),
+                                  nn.LayerNorm(64),
                                   nn.GELU(),
                                   )
         self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 3, padding=1, bias=False),
-                                  nn.LayerNorm(num_features=out_channel),
+                                  nn.LayerNorm(out_channel),
                                   nn.GELU(),
                                   nn.Dropout(0.3),
                                   nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
-                                  nn.LayerNorm(num_features=out_channel),
+                                  nn.LayerNorm(out_channel),
                                   nn.GELU(),
                                   nn.Dropout(0.1),
                                   )
