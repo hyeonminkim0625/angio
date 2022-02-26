@@ -5,17 +5,53 @@ import torch.nn.functional as F
 from models.deeplabv3plus.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from functools import partial
 
+class InvertedBottleneck(nn.Module):
+    """Some Information about InvertedBottleneck"""
+    def __init__(self,in_channel, out_channel,scale,hw):
+        super(InvertedBottleneck, self).__init__()
+        self.head = nn.Sequential(
+            nn.Conv2d(in_channel, in_channel*scale, kernel_size=1, padding=0, bias=False),
+            nn.LayerNorm((in_channel*scale,hw,hw)),
+            nn.Conv2d(in_channel*scale, in_channel*scale, kernel_size=7, padding=3, groups=in_channel*scale,bias=False),
+            nn.LayerNorm((in_channel*scale,hw,hw)),
+            nn.GELU(),
+            nn.Dropout(0.3),
+            nn.Conv2d(in_channel*scale, out_channel, kernel_size=1, padding=0, bias=False),
+        )
+        self.use_residual = in_channel==out_channel
+        self._init_weight()
+            
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+    def forward(self, x):
+        if self.use_residual:
+            x = x+self.head(x)
+        else:
+            x = self.head(x)
+        return x
+
 class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
     def __init__(self,low_in_channel,high_in_channel,out_channel,scale_factor):
         super(Decoder_revised, self).__init__()
         
         low_hw = 64 if low_in_channel ==384 else 128
-        self.proj = nn.Sequential(nn.Conv2d(low_in_channel, 64, 3, padding=1, bias=False),
-                                  nn.LayerNorm((64,low_hw,low_hw)),
-                                  nn.GELU(),
-                                  )
-        self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 3, padding=1, bias=False),
+        self.proj = InvertedBottleneck(low_in_channel,64,4,low_hw)
+        self.head = nn.Sequential(
+            InvertedBottleneck(64+high_in_channel,out_channel,4,low_hw),
+            InvertedBottleneck(out_channel,out_channel,4,low_hw),
+        )
+        """
+        nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.LayerNorm((out_channel,low_hw,low_hw)),
                                   nn.GELU(),
                                   nn.Dropout(0.3),
@@ -24,6 +60,7 @@ class Decoder_revised(nn.Module):
                                   nn.GELU(),
                                   nn.Dropout(0.1),
                                   )
+        """
         
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
         self._init_weight()
