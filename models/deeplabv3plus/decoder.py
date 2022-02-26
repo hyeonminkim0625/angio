@@ -18,6 +18,7 @@ class InvertedBottleneck(nn.Module):
         self.pwconv2 = nn.Linear(scale * in_channel, out_channel)
         self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((out_channel)), 
                                     requires_grad=True) if layer_scale_init_value > 0 else None
+        self.residual = in_channel==out_channel
 
     def forward(self, x):
         input = x
@@ -31,8 +32,9 @@ class InvertedBottleneck(nn.Module):
         if self.gamma is not None:
             x = self.gamma * x
         x = x.permute(0, 3, 1, 2) # (N, H, W, C) -> (N, C, H, W)
-
-        x = input + x
+        if self.residual:
+            x = input + x
+        return x
 
 class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
