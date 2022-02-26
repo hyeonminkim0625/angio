@@ -125,6 +125,9 @@ def train(args):
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
     elif args.scheduler=='cosineannealing':
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
+    else:
+        print("no scheduler")
+        exit()
     
     if args.multigpu:
         model = nn.DataParallel(model)
