@@ -10,16 +10,18 @@ class Decoder_revised(nn.Module):
     def __init__(self,low_in_channel,high_in_channel,out_channel,scale_factor):
         super(Decoder_revised, self).__init__()
         
+        low_hw = 64 if low_in_channel ==384 else 128
+        high_hw = 32 if low_in_channel ==384 else 64
         self.proj = nn.Sequential(nn.Conv2d(low_in_channel, 64, 3, padding=1, bias=False),
-                                  nn.LayerNorm(64),
+                                  nn.LayerNorm((64,low_hw,low_hw)),
                                   nn.GELU(),
                                   )
         self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 3, padding=1, bias=False),
-                                  nn.LayerNorm(out_channel),
+                                  nn.LayerNorm((out_channel,high_hw,high_hw)),
                                   nn.GELU(),
                                   nn.Dropout(0.3),
                                   nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
-                                  nn.LayerNorm(out_channel),
+                                  nn.LayerNorm((out_channel,high_hw,high_hw)),
                                   nn.GELU(),
                                   nn.Dropout(0.1),
                                   )

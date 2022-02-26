@@ -9,7 +9,7 @@ class _ASPPModule(nn.Module):
         super(_ASPPModule, self).__init__()
         self.atrous_conv = nn.Conv2d(inplanes, planes, kernel_size=kernel_size,
                                             stride=1, padding=padding, dilation=dilation, bias=False)
-        self.bn = BatchNorm(planes)
+        self.bn = BatchNorm((planes,32,32))
         self.relu = nn.GELU()
         self._init_weight()
 
@@ -58,10 +58,10 @@ class ASPP(nn.Module):
 
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
-                                             nn.LayerNorm(256),
+                                             nn.LayerNorm((256,1,1)),
                                              nn.GELU())
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
-        self.bn1 = nn.LayerNorm(256)
+        self.bn1 = nn.LayerNorm((256,32,32))
         self.relu = nn.GELU()
         self.dropout = nn.Dropout(0.3)
         self._init_weight()
