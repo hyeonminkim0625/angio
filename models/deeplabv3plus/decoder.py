@@ -9,35 +9,30 @@ class InvertedBottleneck(nn.Module):
     """Some Information about InvertedBottleneck"""
     def __init__(self,in_channel, out_channel,scale,hw):
         super(InvertedBottleneck, self).__init__()
-        self.head = nn.Sequential(
-            nn.Conv2d(in_channel, in_channel*scale, kernel_size=1, padding=0, bias=False),
-            nn.LayerNorm((in_channel*scale,hw,hw)),
-            nn.Conv2d(in_channel*scale, in_channel*scale, kernel_size=7, padding=3, groups=in_channel*scale,bias=False),
-            nn.LayerNorm((in_channel*scale,hw,hw)),
-            nn.GELU(),
-            nn.Dropout(0.3),
-            nn.Conv2d(in_channel*scale, out_channel, kernel_size=1, padding=0, bias=False),
-        )
-        self.use_residual = in_channel==out_channel
-        self._init_weight()
-            
-    def _init_weight(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                torch.nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+        layer_scale_init_value = 1e-6
+        self.dwconv = nn.Conv2d(in_channel, in_channel, kernel_size=7, padding=3, groups=in_channel) # depthwise conv
+        self.norm = nn.LayerNorm((hw,hw,in_channel), eps=1e-6)
+        self.pwconv1 = nn.Linear(in_channel, scale * in_channel) # pointwise/1x1 convs, implemented with linear layers
+        self.act = nn.GELU()
+        self.drop = nn.Dropout(0.3)
+        self.pwconv2 = nn.Linear(scale * in_channel, out_channel)
+        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((out_channel)), 
+                                    requires_grad=True) if layer_scale_init_value > 0 else None
 
     def forward(self, x):
-        if self.use_residual:
-            x = x+self.head(x)
-        else:
-            x = self.head(x)
-        return x
+        input = x
+        x = self.dwconv(x)
+        x = x.permute(0, 2, 3, 1) # (N, C, H, W) -> (N, H, W, C)
+        x = self.norm(x)
+        x = self.pwconv1(x)
+        x = self.act(x)
+        x = self.drop(x)
+        x = self.pwconv2(x)
+        if self.gamma is not None:
+            x = self.gamma * x
+        x = x.permute(0, 3, 1, 2) # (N, H, W, C) -> (N, C, H, W)
+
+        x = input + x
 
 class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
