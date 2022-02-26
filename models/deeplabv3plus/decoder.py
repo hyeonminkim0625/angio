@@ -5,6 +5,26 @@ import torch.nn.functional as F
 from models.deeplabv3plus.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from functools import partial
 
+class InvertedBottleneck(nn.Module):
+    """Some Information about InvertedBottleneck"""
+    def __init__(self,in_channel, out_channel,scale,hw):
+        super(InvertedBottleneck, self).__init__()
+        self.head = nn.Sequential(
+            nn.Conv2d(in_channel, in_channel*scale, kernel_size=1, padding=0, bias=False),
+            nn.LayerNorm((in_channel*scale,hw,hw)),
+            nn.GELU(),
+            nn.Conv2d(in_channel*scale, in_channel*scale, kernel_size=7, padding=3, groups=in_channel*scale,bias=False),
+            nn.LayerNorm((in_channel*scale,hw,hw)),
+            nn.GELU(),
+            nn.Conv2d(in_channel, out_channel, kernel_size=1, padding=0, bias=False),
+            nn.LayerNorm((out_channel,hw,hw)),
+            nn.GELU(),
+        )
+
+    def forward(self, x):
+        x = x+self.head(x)
+        return x
+
 class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
     def __init__(self,low_in_channel,high_in_channel,out_channel,scale_factor):
