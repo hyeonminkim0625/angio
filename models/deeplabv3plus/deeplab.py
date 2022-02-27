@@ -21,8 +21,10 @@ class DeepLab(nn.Module):
 
         self.aux = args.aux
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        self.aspp = build_aspp(backbone, 16, BatchNorm)
-        self.decoder1 = Decoder_revised(384,256,256,2)
+        #self.aspp = build_aspp(backbone, 16, BatchNorm)
+
+        self.decoder_low = Decoder_revised(768,1536,512,2)
+        self.decoder1 = Decoder_revised(384,512,256,2)
         self.decoder2 = Decoder_revised(192,256,256,2)
         
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
@@ -46,7 +48,7 @@ class DeepLab(nn.Module):
         
         x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
 
-        x3 = self.aspp(torch.cat((x3,x4),dim=1))
+        x3 = self.decoder_low(torch.cat((x3,x4),dim=1))
 
 
         """
