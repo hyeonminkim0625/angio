@@ -18,10 +18,6 @@ class Decoder_revised(nn.Module):
         self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 7, padding=3, bias=False),
                                   nn.BatchNorm2d((out_channel)),
                                   nn.GELU(),
-                                  nn.Dropout(0.5),
-                                  nn.Conv2d(out_channel, out_channel, 7, padding=3, bias=False),
-                                  nn.BatchNorm2d((out_channel)),
-                                  nn.GELU(),
                                   nn.Dropout(0.1),
                                   )
         
