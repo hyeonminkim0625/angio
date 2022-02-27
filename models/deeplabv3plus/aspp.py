@@ -9,7 +9,7 @@ class _ASPPModule(nn.Module):
         super(_ASPPModule, self).__init__()
         self.atrous_conv = nn.Conv2d(inplanes, planes, kernel_size=kernel_size,
                                             stride=1, padding=padding, dilation=dilation, bias=False)
-        self.bn = BatchNorm((planes,32,32))
+        self.bn = BatchNorm((planes))
         self.relu = nn.GELU()
         self._init_weight()
 
@@ -51,17 +51,17 @@ class ASPP(nn.Module):
         else:
             raise NotImplementedError
 
-        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=nn.LayerNorm)
-        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=nn.LayerNorm)
-        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=nn.LayerNorm)
-        self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=nn.LayerNorm)
+        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=nn.BatchNorm2d)
+        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=nn.BatchNorm2d)
+        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=nn.BatchNorm2d)
+        self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=nn.BatchNorm2d)
 
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
-                                             nn.LayerNorm((256,1,1)),
+                                             nn.BatchNorm2d((256)),
                                              nn.GELU())
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
-        self.bn1 = nn.LayerNorm((256,32,32))
+        self.bn1 = nn.BatchNorm2d((256))
         self.relu = nn.GELU()
         self.dropout = nn.Dropout(0.3)
         self._init_weight()
