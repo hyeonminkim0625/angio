@@ -12,7 +12,7 @@ class Decoder_revised(nn.Module):
         
         low_hw = 64 if low_in_channel ==384 else 128
         self.proj = nn.Sequential(nn.Conv2d(low_in_channel, 64, 7, padding=3, bias=False),
-                                  nn.BatchNorm2d((out_channel)),
+                                  nn.BatchNorm2d((64)),
                                   nn.GELU(),
                                   )
         self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 7, padding=3, bias=False),
