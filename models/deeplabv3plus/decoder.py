@@ -9,11 +9,11 @@ class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
     def __init__(self,in_channel,out_channel,scale_factor):
         super(Decoder_revised, self).__init__()
-        self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 7, padding=3, bias=False),
+        self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
                                   nn.Dropout(0.5),
-                                  nn.Conv2d(out_channel, out_channel, 7, padding=3, bias=False),
+                                  nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
                                   nn.Dropout(0.1),
