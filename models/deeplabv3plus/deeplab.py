@@ -46,7 +46,7 @@ class DeepLab(nn.Module):
         
         x1,x2,x3,x4 = self.backbone(input)
         
-        x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
+        #x4 = F.interpolate(x4, size=x3.size()[2:], mode='bilinear', align_corners=True)
 
         #x3 = self.aspp(torch.cat((x3,x4),dim=1))
         x3 = self.decoder_low(x4,x3)
