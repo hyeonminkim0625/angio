@@ -11,11 +11,13 @@ class Decoder_revised(nn.Module):
         super(Decoder_revised, self).__init__()
         
         low_hw = 64 if low_in_channel ==384 else 128
+        """
         self.proj = nn.Sequential(nn.Conv2d(low_in_channel, 64, 1, padding=0, bias=False),
                                   nn.BatchNorm2d((64)),
                                   nn.GELU(),
                                   )
-        self.head = nn.Sequential(nn.Conv2d(64+high_in_channel, out_channel, 7, padding=3, bias=False),
+        """
+        self.head = nn.Sequential(nn.Conv2d(low_in_channel+high_in_channel, out_channel, 7, padding=3, bias=False),
                                   nn.BatchNorm2d((out_channel)),
                                   nn.GELU(),
                                   nn.Dropout(0.1),
@@ -37,7 +39,7 @@ class Decoder_revised(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, x,low_feature):
-        low_feature = self.proj(low_feature)
+        #low_feature = self.proj(low_feature)
         x = self.upsample(x)
         x = torch.cat((x,low_feature),dim=1)
         x = self.head(x)
