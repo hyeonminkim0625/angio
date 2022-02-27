@@ -63,7 +63,7 @@ class ASPP(nn.Module):
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
         self.bn1 = nn.BatchNorm2d((256))
         self.relu = nn.GELU()
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.5)
         self._init_weight()
 
     def forward(self, x):
