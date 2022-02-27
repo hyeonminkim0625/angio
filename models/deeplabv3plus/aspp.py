@@ -9,8 +9,9 @@ class _ASPPModule(nn.Module):
         super(_ASPPModule, self).__init__()
         self.atrous_conv = nn.Conv2d(inplanes, planes, kernel_size=kernel_size,
                                             stride=1, padding=padding, dilation=dilation, bias=False)
-        self.bn = BatchNorm((planes))
-        self.relu = nn.GELU()
+        self.bn = BatchNorm(planes)
+        self.relu = nn.ReLU()
+
         self._init_weight()
 
     def forward(self, x):
@@ -40,8 +41,7 @@ class ASPP(nn.Module):
         elif backbone == 'hrnet':
             inplanes = 256+512+1024
         elif backbone == 'convnext':
-            inplanes = 2304
-
+            inplanes = 512+1024
         else:
             inplanes = 2048
         if output_stride == 16:
@@ -51,18 +51,18 @@ class ASPP(nn.Module):
         else:
             raise NotImplementedError
 
-        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=nn.BatchNorm2d)
-        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=nn.BatchNorm2d)
-        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=nn.BatchNorm2d)
-        self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=nn.BatchNorm2d)
+        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=BatchNorm)
+        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=BatchNorm)
+        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=BatchNorm)
+        self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=BatchNorm)
 
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
-                                             nn.BatchNorm2d((256)),
-                                             nn.GELU())
+                                             BatchNorm(256),
+                                             nn.ReLU())
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
-        self.bn1 = nn.BatchNorm2d((256))
-        self.relu = nn.GELU()
+        self.bn1 = BatchNorm(256)
+        self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
         self._init_weight()
 
