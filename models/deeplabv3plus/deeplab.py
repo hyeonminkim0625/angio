@@ -24,8 +24,8 @@ class DeepLab(nn.Module):
         #self.decoder1 = build_decoder(256, backbone, BatchNorm, 128)
         #self.decoder1 = build_decoder(num_classes, backbone, BatchNorm, 128)
         #self.decoder2 = build_decoder(num_classes, backbone, BatchNorm, 64)
-        self.decoder1 = Decoder_revised(256+256,256,2)
-        self.decoder2 = Decoder_revised(256+128,256,2)
+        self.decoder1 = Decoder_revised(384+256,256,2)
+        self.decoder2 = Decoder_revised(256+192,256,2)
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
         self.freeze_bn = freeze_bn
 
