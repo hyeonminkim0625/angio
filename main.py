@@ -53,6 +53,7 @@ def get_args_parser():
     parser.add_argument('--aspp_dropout', default=0.5, type=float)
     parser.add_argument('--last_dropout', default=0.5, type=float)
     parser.add_argument('--label_smoothing', default=0.0, type=float)
+    parser.add_argument('--ema', action='store_true')
 
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
