@@ -95,5 +95,5 @@ class ASPP(nn.Module):
                 m.bias.data.zero_()
 
 
-def build_aspp(backbone, output_stride, BatchNorm):
-    return ASPP(backbone, output_stride, BatchNorm)
+def build_aspp(backbone, output_stride, BatchNorm,args):
+    return ASPP(backbone, output_stride, BatchNorm,args)
