@@ -185,13 +185,14 @@ def train(args):
                 weight_dict['base_optimizer_state_dict'] = base_opt.state_dict()
             
             save_weight_path = args.weight_dir+'/'+args.model+'_'+str(i)+'.pth'
-            torch.save(weight_dict,save_weight_path)
+            
 
             wandb_dict_train.update(wandb_dict_val)
             
             if wandb_dict_val['class1 iou'] > best_weight_dict['class1 iou']:
                 best_weight_dict['class1 iou'] = wandb_dict_val['class1 iou']
                 best_weight_dict['path'] = save_weight_path
+                torch.save(weight_dict,save_weight_path)
         
         print(best_weight_dict)
         if args.wandb:
