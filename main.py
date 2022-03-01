@@ -177,7 +177,7 @@ def train(args):
 
             weight_dict = {
                 'epoch': i,
-                'model_state_dict': model_EMA.module.state_dict() if args.ema else model.module.state_dict(),
+                'model_state_dict': model_EMA.state_dict() if args.ema else model.module.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler' : scheduler.state_dict()}
             
