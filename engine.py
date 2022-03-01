@@ -17,8 +17,6 @@ from metric import averaged_hausdorff_distance as ahd, calculate_iou, calculate_
 from scipy.spatial.distance import directed_hausdorff
 import torch.nn.functional as F
 
-from models.loss import centerline_loss_fn, vector_loss
-
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
