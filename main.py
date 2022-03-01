@@ -173,7 +173,7 @@ def train(args):
                 with model_EMA.average_parameters():
                     wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args,model_EMA)
             else:
-                wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args,model_EMA)
+                wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args)
 
             weight_dict = {
                 'epoch': i,
