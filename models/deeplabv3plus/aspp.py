@@ -78,6 +78,7 @@ class ASPP(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
+        print(x.shape)
 
         return self.dropout(x)
 
