@@ -133,7 +133,7 @@ class Angio_Dataset(torch.utils.data.Dataset):
 
         for i in range(self.num_classes):
             target[:,:,i] = (target_index==i)*1
-        target = target.astype(np.int64)
+        target = target.astype(np.float32)
 
         if self.args.histogram_eq:
             img[:,:,1] = histogram_eq(img[:,:,1])

@@ -35,18 +35,10 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
         if 'center' in targets.keys():
             targets_center = torch.stack([s.to(device) for s in targets["center"]],dim=0)
-        if 'coord' in targets.keys():
-            targets_coord = torch.stack([s.to(device) for s in targets["coord"]],dim=0)
 
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
 
-        """
-        if 'center' in targets.keys():
-            loss += centerline_loss_fn(targets_center,outputs,targets_index)
-        if 'coord' in targets.keys():
-            loss += vector_loss(targets_coord,outputs,targets_index)
-        """
         total_loss += float(loss)
 
         optimizer.zero_grad()
@@ -55,8 +47,8 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         optimizer.step()
     
     total_loss = total_loss/(batch_num*args.batch_size)
-    if args.wandb:
-        wandb.log({"train average losses" : total_loss})
+
+    return {"train average losses" : total_loss}
 
 @torch.no_grad()
 def evaluate(model, criterion, data_loader, device, args):
@@ -74,15 +66,12 @@ def evaluate(model, criterion, data_loader, device, args):
         samples = samples.to(device)
 
         targets_index = torch.stack([s.to(device) for s in targets["index"]],dim=0)
+
         if 'center' in targets.keys():
             targets_center = torch.stack([s.to(device) for s in targets["center"]],dim=0)
         
         outputs = model(samples)
         loss = criterion(outputs, targets_index)
-        """
-        if 'center' in targets.keys():
-            loss += centerline_loss_fn(targets_center,outputs,targets_index)
-        """    
         total_loss += float(loss)
 
         num_classes = outputs.shape[1]
@@ -202,18 +191,18 @@ def evaluate(model, criterion, data_loader, device, args):
                     wandb.log(temp_dict)
 
     total_loss = total_loss/(batch_num*args.batch_size)
-   
-    if args.wandb:
-        wandb_dict = {"eval "+str(args.mode)+" average losses" : total_loss}
-
-        for i in range(0,num_classes):
-            temp = np.array([p['class'+str(i)+'_iou'] for p in path_iou_array])
-            wandb_dict["class"+str(i)+" iou"] = np.mean(temp)*100
-        
-        wandb_dict["total iou"] = (wandb_dict['class0 iou'] + wandb_dict['class1 iou'])/2.0
-
-        wandb.log(wandb_dict)
+    wandb_dict = {"eval "+str(args.mode)+" average losses" : total_loss}
+    for i in range(0,num_classes):
+        temp = np.array([p['class'+str(i)+'_iou'] for p in path_iou_array])
+        wandb_dict["class"+str(i)+" iou"] = np.mean(temp)*100
+    
+    wandb_dict["total iou"] = (wandb_dict['class0 iou'] + wandb_dict['class1 iou'])/2.0
+    
     if args.eval:
         for i in range(1,num_classes):
             temp = np.array([p['class'+str(i)+'_iou'] for p in path_iou_array])
             print("class"+str(i)+" iou", np.mean(temp)*100)
+        if args.wandb:
+            wandb.log(wandb_dict)
+    if args.wandb:
+        return wandb_dict

@@ -101,10 +101,8 @@ class Loss_wrapper(nn.Module):
             self.dicelossfun = DiceLoss()
 
     def forward(self, pred, target):
-        #if torch.__version__ != '1.10.1':
-        target = torch.argmax(target,dim=1)
-        #else:
-        #target = target.to(dtype=torch.float32)
+        if torch.__version__ != '1.10.1':
+            target = torch.argmax(target,dim=1)
         loss = self.lossfun(pred,target)
         if self.args.loss == 'dicecrossentropy':
             loss+=self.dicelossfun(pred,target)
@@ -154,7 +152,9 @@ class DiceLoss(nn.Module):
     def forward(self, inputs, targets, smooth=1):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
-        inputs = F.sigmoid(inputs)       
+        inputs = F.sigmoid(inputs)
+        if torch.__version__ != '1.10.1':
+            targets = F.one_hot(targets).permute(0,3,1,2)
         intersection = (inputs * targets).sum()
         total = (inputs + targets).sum()
         union = total - intersection

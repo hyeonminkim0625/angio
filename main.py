@@ -129,10 +129,10 @@ def train(args):
 
     for i in range(args.epochs):
         
-        train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
+        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
 
         if (i+1)%args.valperepoch==0:
-            evaluate(model, criterion, val_dataloader ,device , args)
+            wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args)
             weight_dict = {
                 'epoch': i,
                 'model_state_dict': model.module.state_dict(),
@@ -141,9 +141,14 @@ def train(args):
             
             if base_opt is not None:
                 weight_dict['base_optimizer_state_dict'] = base_opt.state_dict()
+
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
-            
+                
+            wandb_dict_train.update(wandb_dict_val)
+        
+        if args.wandb:
+            wandb.log(wandb_dict_train)
         if args.scheduler!='cosineannealing':
             scheduler.step()
 
@@ -197,60 +202,20 @@ if __name__ == '__main__':
     #torch.backends.cudnn.deterministic = True
     #torch.backends.cudnn.benchmark = False
    
-
-    if args.wandb:
-        wandb.init(project='angio_'+args.model+'_'+args.mode)
     if args.output_dir:
         if args.eval:
             Path(args.output_dir+'_'+args.model+'_'+args.mode).mkdir(parents=True, exist_ok=True)
             Path(args.output_dir+'_'+args.model+'_'+args.mode+'/hard_sample').mkdir(parents=True, exist_ok=True)
         else:
             for i in range(100):
-                #if args.wandb:
-                    #args.model = wandb.config['model']
                 if not Path(args.weight_dir+'_'+args.model+'_'+str(i)).is_dir():
                     args.weight_dir = args.weight_dir+'_'+args.model+'_'+str(i)
-                    #wandb.config['weight_dir']  = args.weight_dir
                     Path(args.weight_dir).mkdir(parents=True, exist_ok=True)
                     break
+    if args.wandb:
+        wandb.init(project='angio_'+args.model+'_'+args.mode)
+        wandb.config.update(args)
     if args.eval:
         eval(args)
     else:
-        """
-        wandb.config['multigpu']=True
-        wandb.config['num_classes']=2
-        wandb.config['output_dir']='.'
-        wandb.config['mode']='train'
-        wandb.config['mask_argmax']=True
-        wandb.config['eval']=False
-        wandb.config['weight_path']='/'
-        wandb.config['saveallfig']=False
-        wandb.config['onlymask']=False
-        wandb.config['report_hard_sample']=0
-        wandb.config['wandb']=True
-        """
-        
         train(args)
-"""
-보류
-"""
-def run(gpu, ngpus_per_node ,args):
-
-    dist.init_process_group(backend="gloo",rank=gpu,world_size=ngpus_per_node)
-
-    model = BaseLine_model(False, args.num_classes)
-    criterion = Loss_wrapper(args)
-
-    
-    model = model.to(gpu)
-    ddp_model = DistributedDataParallel(model,device_ids=[gpu])
-    optimizer = torch.optim.AdamW(ddp_model.parameters(), lr = args.lr)
-    criterion.to(gpu)
-
-    dataset = IVUS_Dataset(args.num_classes)
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-    dataloader = torch.utils.data.DataLoader(dataset,batch_sampler = sampler,  batch_size=args.batch_size)
-
-    for i in range(100):
-        train_one_epoch(model, criterion, dataloader , optimizer ,gpu , i)
-        evaluate(model, criterion, dataloader ,gpu , i)
