@@ -49,8 +49,7 @@ def get_args_parser():
     parser.add_argument('--centerline', default=False, type=bool)
     parser.add_argument('--scheduler', default='step', type=str)
     parser.add_argument('--aux', default=-1.0, type=float)
-    
-    
+
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
     parser.add_argument('--mode',default='train',type=str)
@@ -149,6 +148,8 @@ def train(args):
     val_dataset = Angio_Dataset(args.num_classes,mode = "val",args=args)
     val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=drop)
 
+    best_weight_dict = {"path": " ","class1 iou" : 0.0}
+
     for i in range(args.epochs):
         
         wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
@@ -163,16 +164,23 @@ def train(args):
             
             if base_opt is not None:
                 weight_dict['base_optimizer_state_dict'] = base_opt.state_dict()
-
-            torch.save(weight_dict,
-                args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
+            
+            save_weight_path = args.weight_dir+'/'+args.model+'_'+str(i)+'.pth'
+            torch.save(weight_dict,save_weight_path)
 
             wandb_dict_train.update(wandb_dict_val)
+            
+            if wandb_dict_val['class1 iou'] > best_weight_dict['class1 iou']:
+                best_weight_dict['class1 iou'] = wandb_dict_val['class1 iou']
+                best_weight_dict['path'] = save_weight_path
         
+        print(best_weight_dict)
         if args.wandb:
             wandb.log(wandb_dict_train)
         if args.scheduler!='cosineannealing':
             scheduler.step()
+    print("training finish")
+    print(best_weight_dict)
 
 def eval(args):
     model = None
