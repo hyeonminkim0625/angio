@@ -97,13 +97,35 @@ def train(args):
 
     optimizer = None
     base_opt = None
+    param_dicts = None
+    """
+    optim
+    """
+    
+    if args.lr_backbone > 0.0:
+        param_dicts = [
+        {"params": [p for n, p in model.named_parameters() if "backbone" not in n and p.requires_grad]},
+        {
+            "params": [p for n, p in model.named_parameters() if "backbone" in n and p.requires_grad],
+            "lr": args.lr_backbone,
+        },
+    ]
     if args.opt == 'rll':
-        base_opt=rl.Ralamb(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
+        if args.lr_backbone > 0.0:
+            base_opt=rl.Ralamb(param_dicts,lr=args.lr,weight_decay=args.weight_decay)
+        else:
+            base_opt=rl.Ralamb(model.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         optimizer = rl.Lookahead(base_opt,alpha=0.5,k=5)
     elif args.opt == 'adamw':
-        optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+        if args.lr_backbone > 0.0:
+            optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+        else:
+            optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     elif args.opt == 'radam':
-        optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+        if args.lr_backbone > 0.0:
+            optimizer = optim.RAdam(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+        else:
+            optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     
     
     if args.scheduler == 'step':
@@ -144,7 +166,7 @@ def train(args):
 
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
-                
+
             wandb_dict_train.update(wandb_dict_val)
         
         if args.wandb:
