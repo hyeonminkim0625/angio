@@ -32,7 +32,7 @@ class _ASPPModule(nn.Module):
                 m.bias.data.zero_()
 
 class ASPP(nn.Module):
-    def __init__(self, backbone, output_stride, BatchNorm):
+    def __init__(self, backbone, output_stride, BatchNorm,args):
         super(ASPP, self).__init__()
         if backbone == 'drn':
             inplanes = 512
@@ -63,7 +63,7 @@ class ASPP(nn.Module):
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
         self.bn1 = BatchNorm(256)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(args.aspp_dropout)
         self._init_weight()
 
     def forward(self, x):

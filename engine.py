@@ -22,7 +22,7 @@ from models.loss import centerline_loss_fn, vector_loss
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, args):
+                    device: torch.device, args,scheduler):
     
     model.train()
     criterion.train()
@@ -43,8 +43,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         optimizer.zero_grad()
         loss.backward()
-
         optimizer.step()
+        if args.scheduler=='cosineannealing':
+            scheduler.step()
     
     total_loss = total_loss/(batch_num*args.batch_size)
 

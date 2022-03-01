@@ -8,23 +8,16 @@ from models.deeplabv3plus.decoder import build_decoder, Decoder_revised
 from models.deeplabv3plus.backbone import build_backbone
 
 class DeepLab(nn.Module):
-    def __init__(self, backbone='resnet', output_stride=16, num_classes=21,
-                 sync_bn=True, freeze_bn=False):
+    def __init__(self, backbone,args):
         super(DeepLab, self).__init__()
-        if backbone == 'drn':
-            output_stride = 8
-        if sync_bn == True:
-            BatchNorm = SynchronizedBatchNorm2d
-        else:
-            BatchNorm = nn.BatchNorm2d
+        BatchNorm = nn.BatchNorm2d
 
-        self.backbone = build_backbone(backbone, output_stride, BatchNorm)
-        self.aspp = build_aspp(backbone, 16, BatchNorm)
+        self.backbone = build_backbone(backbone, 16, BatchNorm)
+        self.aspp = build_aspp(backbone, 16, BatchNorm,args)
 
-        self.decoder1 = Decoder_revised(384+256,256,2)
-        self.decoder2 = Decoder_revised(256+192,256,2)
+        self.decoder1 = Decoder_revised(384+256,256,2,args)
+        self.decoder2 = Decoder_revised(256+192,256,2,args)
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
-        self.freeze_bn = freeze_bn
 
     def forward(self, input):
         x1,x2,x3,x4 = self.backbone(input)

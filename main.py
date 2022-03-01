@@ -49,6 +49,8 @@ def get_args_parser():
     parser.add_argument('--centerline', default=False, type=bool)
     parser.add_argument('--scheduler', default='step', type=str)
     parser.add_argument('--aux', default=-1.0, type=float)
+    parser.add_argument('--decoder_dropout', default=0.5, type=float)
+    parser.add_argument('--aspp_dropout', default=0.5, type=float)
 
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
@@ -152,7 +154,7 @@ def train(args):
 
     for i in range(args.epochs):
         
-        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args=args)
+        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args, scheduler)
 
         if (i+1)%args.valperepoch==0:
             wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args)
