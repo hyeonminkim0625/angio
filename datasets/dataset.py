@@ -132,7 +132,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
             target = np.zeros((h,w,self.num_classes))
 
         for i in range(self.num_classes):
-            target[:,:,i] = (target_index==i)*1
+            target[:,:,i] = (target_index==i)*1*(1-self.args.label_smoothing)
+            if self.args.label_smoothing>0.0:
+                target[:,:,i] = (target_index!=i)*1*self.args.label_smoothing
         target = target.astype(np.float32)
 
         if self.args.histogram_eq:

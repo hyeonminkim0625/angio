@@ -63,7 +63,7 @@ class ASPP(nn.Module):
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
         self.bn1 = BatchNorm(256)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(args.aspp_dropout)
+        self.dropout = nn.Dropout(args.aspp_dropout) if args.aspp_dropout >0.0 else nn.Identity(),
         self._init_weight()
 
     def forward(self, x):

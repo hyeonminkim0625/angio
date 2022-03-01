@@ -17,6 +17,7 @@ class DeepLab(nn.Module):
 
         self.decoder1 = Decoder_revised(384+256,256,2,args)
         self.decoder2 = Decoder_revised(256+192,256,2,args)
+        self.dropout = nn.Dropout(args.last_fc)
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
 
     def forward(self, input):
@@ -28,7 +29,7 @@ class DeepLab(nn.Module):
         
         x2 = self.decoder1(x3, x2)
         x1 = self.decoder2(x2, x1)
-
+        x1 = self.dropout(x1)
         x1 = self.cls(x1)
         x1 = F.interpolate(x1, size=input.size()[2:], mode='bilinear', align_corners=True)
 

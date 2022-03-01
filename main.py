@@ -21,7 +21,7 @@ import random
 import torch_optimizer as optim
 from optimizer import radam_lookahead as rl
 from warmup_scheduler import GradualWarmupScheduler
-
+from torch_ema import ExponentialMovingAverage
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
@@ -51,6 +51,8 @@ def get_args_parser():
     parser.add_argument('--aux', default=-1.0, type=float)
     parser.add_argument('--decoder_dropout', default=0.5, type=float)
     parser.add_argument('--aspp_dropout', default=0.5, type=float)
+    parser.add_argument('--last_dropout', default=0.5, type=float)
+    parser.add_argument('--label_smoothing', default=0.0, type=float)
 
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
@@ -66,16 +68,23 @@ def get_args_parser():
 
 def train(args):
     print(args)
-    
+
+    if args.label_smoothing>0.0 and torch.__version__ != '1.10.1':
+        print('not compatable')
+        exit()
+
     """
     model
     """
     model = None
+    model_EMA = None
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'fcn' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus" or args.model == "setr":
         model = BaseLine_wrapper(args)
     else:
         print("model input error")
         exit()
+    if args.ema:
+        model_EMA = ExponentialMovingAverage(model.parameters(), decay=0.995)
 
     """
     loss func
@@ -154,13 +163,18 @@ def train(args):
 
     for i in range(args.epochs):
         
-        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args, scheduler)
+        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args, scheduler,model_EMA)
 
         if (i+1)%args.valperepoch==0:
-            wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args)
+            if args.ema:
+                with model_EMA.average_parameters():
+                    wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args,model_EMA)
+            else:
+                wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args,model_EMA)
+
             weight_dict = {
                 'epoch': i,
-                'model_state_dict': model.module.state_dict(),
+                'model_state_dict': model_EMA.module.state_dict() if args.ema else model.module.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler' : scheduler.state_dict()}
             
@@ -186,11 +200,14 @@ def train(args):
 
 def eval(args):
     model = None
+    model_EMA = None
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus" or args.model == "setr":
         model = BaseLine_wrapper(args)
     else:
         print("model input error")
         exit()
+    if args.ema:
+        model_EMA = ExponentialMovingAverage(model.parameters(), decay=0.995)
 
     criterion = None
     if args.loss == 'crossentropy':
@@ -216,9 +233,16 @@ def eval(args):
 
     if args.weight_path is not "/":
         checkpoint = torch.load(args.weight_path)
-        model.load_state_dict(checkpoint['model_state_dict'])
+        if args.ema:
+            model_EMA.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            model.load_state_dict(checkpoint['model_state_dict'])
         print('load weight')
-    evaluate(model, criterion, val_dataloader ,device , args)
+    if args.ema:
+        with model_EMA.average_parameters():
+            evaluate(model, criterion, val_dataloader ,device , args)
+    else:
+        evaluate(model, criterion, val_dataloader ,device , args)
         
 
 if __name__ == '__main__':

@@ -15,14 +15,27 @@ class Decoder_revised(nn.Module):
         self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
-                                  nn.Dropout(args.decoder_dropout),
+                                  nn.Dropout(args.decoder_dropout) if args.decoder_dropout >0.0 else nn.Identity(),
                                   nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
                                   nn.BatchNorm2d(num_features=out_channel),
                                   nn.ReLU(),
-                                  nn.Dropout(0.1),
+                                  nn.Dropout(0.1) if args.decoder_dropout >0.0 else nn.Identity(),
                                   )
         
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
+        self._init_weight()
+
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
 
     def forward(self, x,low_feature):
         x = self.upsample(x)
