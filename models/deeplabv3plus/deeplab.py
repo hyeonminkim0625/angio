@@ -17,7 +17,7 @@ class DeepLab(nn.Module):
 
         self.decoder1 = Decoder_revised(384+256,256,2,args)
         self.decoder2 = Decoder_revised(256+192,256,2,args)
-        self.dropout = nn.Dropout(args.last_fc)
+        self.dropout = nn.Dropout(args.last_dropout)
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
 
     def forward(self, input):
