@@ -30,62 +30,6 @@ def centerline_loss_fn(centerlines,logit,label) :
             outside_ratios.append(0)
     return torch.mean(torch.tensor(outside_ratios,dtype=torch.float32))
 
-def vector_loss(ref_coord,logit,label):
-    b,_,h,w = label.shape
-    counts = []
-    predict_index = torch.argmax(logit,dim=1)
-    predict_index[label[:,1]==1] = 0
-    outside_ratios = []
-    #batch len 2
-
-    ref_coord
-
-    for i in range(b) :
-
-        predict_dist = torch.stack(torch.where(predict_index[i]>0.5),dim=1).to(dtype=torch.float32)
-        #len1 2
-        if len(predict_dist) < 6000 and len(predict_dist)>0:
-            center_dist = torch.stack(torch.where(centerlines[i]>0.5),dim=1).to(dtype=torch.float32)
-            #len2 2
-            res = torch.cdist(predict_dist,center_dist)
-            #len1 len2
-            res = torch.min(res,dim=1)[0]
-            filtered_res = res[res>12]
-            outside_ratios.append(len(filtered_res)/(len(res)+1)*0.5)
-        else :
-            outside_ratios.append(0)
-    return torch.mean(torch.tensor(outside_ratios,dtype=torch.float32))
-"""
-loss function for binary classification
-"""
-class Consistency_loss_wrapper(nn.Module):
-    """Some Information about Consistency_loss_wrapper"""
-    def __init__(self,args):
-        super(Consistency_loss_wrapper, self).__init__()
-        if args.loss == 'crossentropy':
-            self.lossfun = Binary_Loss_wrapper(args)
-        elif args.loss == "focal":
-            self.lossfun = FocalLoss(logits=True)
-        elif args.loss =="dicefocal":
-            self.lossfun = DiceFocalLoss()
-        else:
-            print('error')
-            exit()
-        self.consistency_loss = nn.MSELoss()
-        
-    def forward(self, pred, targets):
-        x,aug_x,coordinate = pred
-        i,j,h,w = coordinate
-        loss = 0
-
-        loss += self.lossfun(x,targets)
-        aug_targets = TF.resized_crop(targets, i, j, h, w, 256)
-        loss += self.lossfun(aug_x,aug_targets)
-        x = TF.resized_crop(x, i, j, h, w, 256)
-        loss += self.consistency_loss(x,aug_x)
-        
-        return loss
-
 class Loss_wrapper(nn.Module):
     
     def __init__(self,args):

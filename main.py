@@ -70,7 +70,7 @@ def get_args_parser():
 def train(args):
     print(args)
 
-    if args.label_smoothing>0.0 and torch.__version__ != '1.10.1':
+    if args.label_smoothing>0.0 and torch.__version__ != '1.10.1' and ('crossentropy' in args.loss):
         print('not compatable')
         exit()
 
@@ -171,7 +171,7 @@ def train(args):
         if (i+1)%args.valperepoch==0:
             if args.ema:
                 with model_EMA.average_parameters():
-                    wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args,model_EMA)
+                    wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args)
             else:
                 wandb_dict_val = evaluate(model, criterion, val_dataloader ,device , args)
 
