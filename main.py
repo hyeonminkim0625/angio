@@ -151,6 +151,8 @@ def train(args):
     #cheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=scheduler)
     model.to(device)
     criterion.to(device)
+    if args.ema:
+        model_EMA.to(device)
 
     drop = True if args.batch_size==8 else False
     
