@@ -27,6 +27,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
     #train
     parser.add_argument('--lr', default=1e-3, type=float)
+    parser.add_argument('--lr_backbone', default=-1.0, type=float)
     parser.add_argument('--batch_size', default=32, type=int )
     parser.add_argument('--weight_decay', default=1e-2, type=float)
     parser.add_argument('--epochs', default=300, type=int)
@@ -46,6 +47,8 @@ def get_args_parser():
     parser.add_argument('--num_classes',default=2, type=int)
     parser.add_argument('--weight_dir', default='./weight', help='path where to save, empty for no saving')
     parser.add_argument('--centerline', default=False, type=bool)
+    parser.add_argument('--scheduler', default='step', type=str)
+    parser.add_argument('--aux', default=-1.0, type=float)
     
     
     #eval
@@ -63,14 +66,19 @@ def get_args_parser():
 def train(args):
     print(args)
     
+    """
+    model
+    """
     model = None
-
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'fcn' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus" or args.model == "setr":
         model = BaseLine_wrapper(args)
     else:
         print("model input error")
         exit()
 
+    """
+    loss func
+    """
     criterion = None
     if args.loss == 'crossentropy' or args.loss == 'dicecrossentropy':
         criterion = Loss_wrapper(args)
@@ -98,19 +106,26 @@ def train(args):
         optimizer = optim.RAdam(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     
     
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
+    if args.scheduler == 'step':
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
+    elif args.scheduler == 'multistep':
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50,80], gamma=0.1)
+    elif args.scheduler=='cosineannealing':
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
+    else:
+        print("no scheduler")
+        exit()
     #cheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=10, after_scheduler=scheduler)
     model.to(device)
     criterion.to(device)
 
-    #if args.wandb:
-    #   wandb.watch(model)
+    drop = True if args.batch_size==8 else False
     
     train_dataset = Angio_Dataset(args.num_classes,mode = "train",args=args)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=24, batch_size=args.batch_size,shuffle=True,drop_last=True)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset,num_workers=16, batch_size=args.batch_size,shuffle=True,drop_last=drop)
 
     val_dataset = Angio_Dataset(args.num_classes,mode = "val",args=args)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=24, batch_size=args.batch_size,shuffle=False,drop_last=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset,num_workers=16, batch_size=args.batch_size,shuffle=False,drop_last=drop)
 
     for i in range(args.epochs):
         
@@ -129,7 +144,8 @@ def train(args):
             torch.save(weight_dict,
                 args.weight_dir+'/'+args.model+'_'+str(i)+'.pth')
             
-        scheduler.step()
+        if args.scheduler!='cosineannealing':
+            scheduler.step()
 
 def eval(args):
     model = None
