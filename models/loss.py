@@ -36,6 +36,7 @@ class Loss_wrapper(nn.Module):
         super(Loss_wrapper, self).__init__()
         self.lossfun = None
         self.args = args
+        self.label_smoothing = args.label_smoothing
         weight = torch.ones((2),device='cuda')
         weight[1]*=args.classweight
         if args.loss == 'crossentropy':
@@ -44,12 +45,15 @@ class Loss_wrapper(nn.Module):
             self.lossfun = nn.CrossEntropyLoss(weight=weight)
             self.dicelossfun = DiceLoss()
 
-    def forward(self, pred, target):
+    def forward(self, pred, targets):
         if torch.__version__ != '1.10.1':
-            target = torch.argmax(target,dim=1)
-        loss = self.lossfun(pred,target)
+            targets = torch.argmax(targets,dim=1)
+        if self.label_smoothing:
+            targets[targets==1] = 1.0-self.lalabel_smoothing
+            targets[targets==0] = self.label_smoothing
+        loss = self.lossfun(pred,targets)
         if self.args.loss == 'dicecrossentropy':
-            loss+=self.dicelossfun(pred,target)
+            loss+=self.dicelossfun(pred,targets)
         return loss
 
 class Binary_Loss_wrapper(nn.Module):
@@ -57,6 +61,7 @@ class Binary_Loss_wrapper(nn.Module):
         super(Binary_Loss_wrapper, self).__init__()
         self.num_classes = args.num_classes
         self.loss = None
+        self.label_smoothing = args.label_smoothing
         if args.loss == "focal":
             self.loss = FocalLoss(logits=True)
         elif args.loss =="dicefocal":
@@ -64,6 +69,9 @@ class Binary_Loss_wrapper(nn.Module):
 
     def forward(self, inputs, targets):
         loss = 0
+        if self.label_smoothing:
+            targets[targets==1] = 1.0-self.lalabel_smoothing
+            targets[targets==0] = self.label_smoothing
         for i in range(self.num_classes):
             loss+=self.loss(inputs[:,i],targets[:,i])
         return loss
