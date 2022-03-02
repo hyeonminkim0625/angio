@@ -70,7 +70,7 @@ class Binary_Loss_wrapper(nn.Module):
     def forward(self, inputs, targets):
         loss = 0
         if self.label_smoothing:
-            targets[targets==1] = 1.0-self.lalabel_smoothing
+            targets[targets==1] = 1.0-self.label_smoothing
             
         for i in range(self.num_classes):
             loss+=self.loss(inputs[:,i],targets[:,i])
