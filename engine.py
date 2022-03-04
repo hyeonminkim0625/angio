@@ -20,13 +20,13 @@ import torch.nn.functional as F
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, args,scheduler,model_EMA):
+                    device: torch.device, args,scheduler,model_EMA,epoch):
     
     model.train()
     criterion.train()
     total_loss = 0
     batch_num = len(data_loader)
-    for samples, targets, _ in tqdm(data_loader):
+    for i,samples, targets, _ in enumerate(tqdm(data_loader)):
 
         samples = samples.to(device)
 
@@ -43,7 +43,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         loss.backward()
         optimizer.step()
         if args.scheduler=='cosineannealing':
-            scheduler.step()
+            scheduler.step(epoch+i/batch_num)
         if args.ema:
             model_EMA.update()
     

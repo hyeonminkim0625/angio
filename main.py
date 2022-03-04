@@ -142,9 +142,11 @@ def train(args):
     if args.scheduler == 'step':
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
     elif args.scheduler == 'multistep':
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50,80], gamma=0.1)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,130], gamma=0.1)
     elif args.scheduler=='cosineannealing':
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,100,2,1e-6)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,10,2,1e-6)
+    elif args.scheduler=='cosinedecay':
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 200, eta_min=1e-7, last_epoch= 200, verbose=False)
     else:
         print("no scheduler")
         exit()
@@ -166,7 +168,7 @@ def train(args):
 
     for i in range(args.epochs):
         
-        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args, scheduler,model_EMA)
+        wandb_dict_train = train_one_epoch(model, criterion, train_dataloader , optimizer ,device ,args, scheduler,model_EMA,i)
 
         if (i+1)%args.valperepoch==0:
             if args.ema:
