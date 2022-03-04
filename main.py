@@ -142,7 +142,7 @@ def train(args):
     if args.scheduler == 'step':
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_drop, gamma=0.1)
     elif args.scheduler == 'multistep':
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100,130], gamma=0.1)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150,180], gamma=0.1)
     elif args.scheduler=='cosineannealing':
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,200,2,1e-6)
     elif args.scheduler=='cosinedecay':
