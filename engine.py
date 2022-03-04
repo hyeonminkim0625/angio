@@ -26,7 +26,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     criterion.train()
     total_loss = 0
     batch_num = len(data_loader)
-    for i,(samples, targets, _) in tqdm(enumerate(data_loader)):
+    for i,(samples, targets, _) in enumerate(tqdm(data_loader)):
 
         samples = samples.to(device)
 
