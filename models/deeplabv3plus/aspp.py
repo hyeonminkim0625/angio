@@ -11,7 +11,7 @@ class _ASPPModule(nn.Module):
                                             stride=1, padding=padding, dilation=dilation, bias=False)
         self.norm = BatchNorm(planes)
         self.act_func = nn.GELU() if args.convnetstyle else nn.ReLU()
-        self.is_convnextstyle=args.convnetstyle
+        self.is_convnextstyle= True if args.convnetstyle else False
         
 
         self._init_weight()
@@ -74,7 +74,7 @@ class ASPP(nn.Module):
         self.bn1 = BatchNorm(256)
         self.relu = nn.GELU() if args.convnetstyle else nn.ReLU()
         self.dropout = nn.Dropout(args.aspp_dropout) if args.aspp_dropout >0.0 else nn.Identity()
-        self.is_convnextstyle=args.convnetstyle
+        self.is_convnextstyle= True if args.convnetstyle else False
         self._init_weight()
 
     def forward(self, x):

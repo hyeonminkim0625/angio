@@ -22,7 +22,7 @@ class Decoder_revised(nn.Module):
         self.drop2 = nn.Dropout(0.1) if args.decoder_dropout >0.0 else nn.Identity()
                                   
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
-        self.is_convnextstyle=args.convnetstyle
+        self.is_convnextstyle= True if args.convnetstyle else False
         self._init_weight()
 
     def _init_weight(self):
