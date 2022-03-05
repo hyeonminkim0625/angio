@@ -9,8 +9,8 @@ class _ASPPModule(nn.Module):
         super(_ASPPModule, self).__init__()
         self.atrous_conv = nn.Conv2d(inplanes, planes, kernel_size=kernel_size,
                                             stride=1, padding=padding, dilation=dilation, bias=False)
-        self.bn = BatchNorm(planes)
-        self.relu = nn.GELU() if args.convnetstyle else nn.ReLU()
+        self.norm = BatchNorm(planes)
+        self.act_func = nn.GELU() if args.convnetstyle else nn.ReLU()
         self.is_convnextstyle=args.convnetstyle
         
 
@@ -18,9 +18,14 @@ class _ASPPModule(nn.Module):
 
     def forward(self, x):
         x = self.atrous_conv(x)
-        x = self.bn(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 2, 3, 1)
+        x = self.norm(x)
+        x = self.act_func(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 3, 1, 2)
 
-        return self.relu(x)
+        return x
 
     def _init_weight(self):
         for m in self.modules():
@@ -30,6 +35,9 @@ class _ASPPModule(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.LayerNorm):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
@@ -100,6 +108,9 @@ class ASPP(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.LayerNorm):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
