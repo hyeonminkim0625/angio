@@ -66,10 +66,10 @@ class ASPP(nn.Module):
         self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=BatchNorm,args=args)
         self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=BatchNorm,args=args)
 
-        self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
-                                             nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
-                                             BatchNorm(256),
-                                             nn.GELU() if args.convnetstyle else nn.ReLU())
+        self.global_avg_pool_avgpool =  nn.AdaptiveAvgPool2d((1, 1))
+        self.global_avg_pool_conv = nn.Conv2d(inplanes, 256, 1, stride=1, bias=False)
+        self.global_avg_pool_norm = BatchNorm(256)
+        self.global_avg_pool_act_func = nn.GELU() if args.convnetstyle else nn.ReLU()
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
         self.bn1 = BatchNorm(256)
         self.relu = nn.GELU() if args.convnetstyle else nn.ReLU()
@@ -82,7 +82,17 @@ class ASPP(nn.Module):
         x2 = self.aspp2(x)
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
-        x5 = self.global_avg_pool(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 2, 3, 1)
+
+        x5 = self.global_avg_pool_avgpool(x)
+        x5 = self.global_avg_pool_conv(x5)
+        x5 = self.global_avg_pool_norm(x5)
+        x5 = self.global_avg_pool_act_func(x5)
+        
+        if self.is_convnextstyle:
+            x = x.permute(0, 3, 1, 2)
+
         x5 = F.interpolate(x5, size=x4.size()[2:], mode='bilinear', align_corners=True)
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
 
