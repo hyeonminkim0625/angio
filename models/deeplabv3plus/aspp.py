@@ -89,9 +89,9 @@ class ASPP(nn.Module):
         x5 = self.global_avg_pool_conv(x5)
         x5 = self.global_avg_pool_norm(x5)
         x5 = self.global_avg_pool_act_func(x5)
-        
+
         if self.is_convnextstyle:
-            x = x.permute(0, 3, 1, 2)
+            x5 = x5.permute(0, 3, 1, 2)
 
         x5 = F.interpolate(x5, size=x4.size()[2:], mode='bilinear', align_corners=True)
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
