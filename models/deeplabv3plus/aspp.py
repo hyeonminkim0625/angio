@@ -82,11 +82,14 @@ class ASPP(nn.Module):
         x2 = self.aspp2(x)
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
-        if self.is_convnextstyle:
-            x = x.permute(0, 2, 3, 1)
+        
 
         x5 = self.global_avg_pool_avgpool(x)
         x5 = self.global_avg_pool_conv(x5)
+
+        if self.is_convnextstyle:
+            x5 = x5.permute(0, 2, 3, 1)
+            
         x5 = self.global_avg_pool_norm(x5)
         x5 = self.global_avg_pool_act_func(x5)
 
