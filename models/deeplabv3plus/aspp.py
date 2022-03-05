@@ -5,12 +5,14 @@ import torch.nn.functional as F
 from models.deeplabv3plus.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 
 class _ASPPModule(nn.Module):
-    def __init__(self, inplanes, planes, kernel_size, padding, dilation, BatchNorm):
+    def __init__(self, inplanes, planes, kernel_size, padding, dilation, BatchNorm,args):
         super(_ASPPModule, self).__init__()
         self.atrous_conv = nn.Conv2d(inplanes, planes, kernel_size=kernel_size,
                                             stride=1, padding=padding, dilation=dilation, bias=False)
         self.bn = BatchNorm(planes)
-        self.relu = nn.ReLU()
+        self.relu = nn.GELU() if args.convnetstyle else nn.ReLU()
+        self.is_convnextstyle=args.convnetstyle
+        
 
         self._init_weight()
 
@@ -51,19 +53,20 @@ class ASPP(nn.Module):
         else:
             raise NotImplementedError
 
-        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=BatchNorm)
-        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=BatchNorm)
-        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=BatchNorm)
-        self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=BatchNorm)
+        self.aspp1 = _ASPPModule(inplanes, 256, 1, padding=0, dilation=dilations[0], BatchNorm=BatchNorm,args=args)
+        self.aspp2 = _ASPPModule(inplanes, 256, 3, padding=dilations[1], dilation=dilations[1], BatchNorm=BatchNorm,args=args)
+        self.aspp3 = _ASPPModule(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2], BatchNorm=BatchNorm,args=args)
+        self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=BatchNorm,args=args)
 
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
                                              BatchNorm(256),
-                                             nn.ReLU())
+                                             nn.GELU() if args.convnetstyle else nn.ReLU())
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
         self.bn1 = BatchNorm(256)
-        self.relu = nn.ReLU()
+        self.relu = nn.GELU() if args.convnetstyle else nn.ReLU()
         self.dropout = nn.Dropout(args.aspp_dropout) if args.aspp_dropout >0.0 else nn.Identity()
+        self.is_convnextstyle=args.convnetstyle
         self._init_weight()
 
     def forward(self, x):
@@ -76,10 +79,16 @@ class ASPP(nn.Module):
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
 
         x = self.conv1(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 2, 3, 1)
+
         x = self.bn1(x)
         x = self.relu(x)
+        x = self.dropout(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 3, 1, 2)
 
-        return self.dropout(x)
+        return x
 
     def _init_weight(self):
         for m in self.modules():

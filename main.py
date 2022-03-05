@@ -54,6 +54,7 @@ def get_args_parser():
     parser.add_argument('--last_dropout', default=0.5, type=float)
     parser.add_argument('--label_smoothing', default=0.0, type=float)
     parser.add_argument('--ema', action='store_true')
+    parser.add_argument('--convnetstyle', action='store_true')
 
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
@@ -146,7 +147,7 @@ def train(args):
     elif args.scheduler=='cosineannealing':
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,2,2,1e-6)
     elif args.scheduler=='cosinedecay':
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,200,2,1e-6)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer,args.epochs,2,1e-6)
     else:
         print("no scheduler")
         exit()

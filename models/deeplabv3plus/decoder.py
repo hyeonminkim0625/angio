@@ -12,17 +12,17 @@ class Decoder_revised(nn.Module):
     def __init__(self,in_channel,out_channel,scale_factor,args):
         super(Decoder_revised, self).__init__()
         
-        self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
-                                  nn.BatchNorm2d(num_features=out_channel),
-                                  nn.ReLU(),
-                                  nn.Dropout(args.decoder_dropout) if args.decoder_dropout >0.0 else nn.Identity(),
-                                  nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
-                                  nn.BatchNorm2d(num_features=out_channel),
-                                  nn.ReLU(),
-                                  nn.Dropout(0.1) if args.decoder_dropout >0.0 else nn.Identity(),
-                                  )
-        
+        self.head_conv1 = nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False)
+        self.head_norm1 = nn.LayerNorm(out_channel) if args.convnetstyle else nn.BatchNorm2d(num_features=out_channel)
+        self.head_activation1 = nn.GELU() if args.convnetstyle else nn.ReLU()
+        self.drop1 = nn.Dropout(args.decoder_dropout) if args.decoder_dropout >0.0 else nn.Identity()
+        self.head_conv2 = nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False)
+        self.head_norm2 = nn.LayerNorm(out_channel) if args.convnetstyle else nn.BatchNorm2d(num_features=out_channel)
+        self.head_activation2 = nn.GELU() if args.convnetstyle else nn.ReLU()
+        self.drop2 = nn.Dropout(0.1) if args.decoder_dropout >0.0 else nn.Identity()
+                                  
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
+        self.is_convnextstyle=args.convnetstyle
         self._init_weight()
 
     def _init_weight(self):
@@ -40,7 +40,24 @@ class Decoder_revised(nn.Module):
     def forward(self, x,low_feature):
         x = self.upsample(x)
         x = torch.cat((x,low_feature),dim=1)
-        x = self.head(x)
+
+        x = self.head_conv1(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 2, 3, 1)
+        x = self.head_norm1(x)
+        x = self.head_activation1(x)
+        x = self.drop1(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 3, 1, 2)
+
+        x = self.head_conv2(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 2, 3, 1)
+        x = self.head_norm2(x)
+        x = self.head_activation2(x)
+        x = self.drop2(x)
+        if self.is_convnextstyle:
+            x = x.permute(0, 3, 1, 2)
         return x
 
 class Decoder(nn.Module):
