@@ -54,9 +54,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
                             annotated_dot = 255-annotated_dot
                             np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
 
-                        if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
-                            centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
-                            cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
+                        #if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                        #    centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
+                        #    cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
                         img_list.append(temp)
 
             self.image_path = img_list
