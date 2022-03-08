@@ -10,7 +10,7 @@ from models.deeplabv3plus.backbone import build_backbone
 class DeepLab(nn.Module):
     def __init__(self, backbone,args):
         super(DeepLab, self).__init__()
-        BatchNorm = nn.LayerNorm if args.convnetstyle else nn.BatchNorm2
+        BatchNorm = nn.LayerNorm if args.convnetstyle else nn.BatchNorm2d
 
         self.backbone = build_backbone(backbone, 16, BatchNorm)
         self.aspp = build_aspp(backbone, 16, BatchNorm,args)
