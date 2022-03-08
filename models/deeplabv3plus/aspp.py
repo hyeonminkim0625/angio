@@ -63,7 +63,7 @@ class ASPP(nn.Module):
         elif backbone == 'hrnet':
             inplanes = 256+512+1024
         elif backbone == 'convnext':
-            inplanes = int((512+1024)*1.5)
+            inplanes = int((512+1024)*1.0)
         else:
             inplanes = 2048
         if output_stride == 16:
