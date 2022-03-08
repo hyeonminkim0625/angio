@@ -22,6 +22,7 @@ import torch_optimizer as optim
 from optimizer import radam_lookahead as rl
 from warmup_scheduler import GradualWarmupScheduler
 from torch_ema import ExponentialMovingAverage
+from adamp import AdamP
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
@@ -133,6 +134,12 @@ def train(args):
             optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+
+    elif args.opt == 'adamp':
+        if args.lr_backbone > 0.0:
+            optimizer = AdamP(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+        else:
+            optimizer = AdamP(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     elif args.opt == 'radam':
         if args.lr_backbone > 0.0:
             optimizer = optim.RAdam(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
