@@ -206,6 +206,8 @@ def train(args):
     print(best_weight_dict)
 
 def eval(args):
+
+    print(args)
     model = None
     model_EMA = None
     if args.model == 'unet' or args.model == 'deeplab' or args.model == 'unet' or args.model == 'unetpp' or args.model == "deeplabv3plus" or args.model == "setr":

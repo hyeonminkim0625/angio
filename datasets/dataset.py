@@ -123,13 +123,13 @@ class Angio_Dataset(torch.utils.data.Dataset):
         
         img = img_load(image_path)
 
-        if self.args.centerline:
-            centerline = cv2.imread("/data/angiosegmentation/centerline/"+self.image_path[index][3]+'.png')
-            centerline = cv2.cvtColor(centerline, cv2.COLOR_BGR2GRAY)
-            target = np.zeros((h,w,self.num_classes+1))
-            target[:,:,-1] = centerline
-        else:
-            target = np.zeros((h,w,self.num_classes))
+        #if self.args.centerline:
+        #    centerline = cv2.imread("/data/angiosegmentation/centerline/"+self.image_path[index][3]+'.png')
+        #    centerline = cv2.cvtColor(centerline, cv2.COLOR_BGR2GRAY)
+        #    target = np.zeros((h,w,self.num_classes+1))
+        #    target[:,:,-1] = centerline
+        #else:
+        target = np.zeros((h,w,self.num_classes))
 
         for i in range(self.num_classes):
             target[:,:,i] = (target_index==i)*1
