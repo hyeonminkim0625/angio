@@ -181,9 +181,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
             img = TF.normalize(img,mean=self.resnet_mean, std=self.resnet_std)
 
         target_dict = {"index": target}
-        if self.args.centerline:
-            target_dict['index'] = target[:-1]
-            target_dict['center'] = target[-1]
+        #if self.args.centerline:
+        #    target_dict['index'] = target[:-1]
+        #    target_dict['center'] = target[-1]
         #if self.args.vectorloss:
         #    target_dict['coord'] = torch.tensor(self.image_path[index][2])
         
