@@ -11,7 +11,8 @@ class Decoder_revised(nn.Module):
     """Some Information about Decoder_revised"""
     def __init__(self,in_channel,out_channel,scale_factor,args):
         super(Decoder_revised, self).__init__()
-        
+
+        """
         self.head_conv1 = nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False)
         self.head_norm1 = nn.LayerNorm(out_channel) if args.convnetstyle else nn.BatchNorm2d(num_features=out_channel)
         self.head_activation1 = nn.GELU() if args.convnetstyle else nn.ReLU()
@@ -20,10 +21,46 @@ class Decoder_revised(nn.Module):
         self.head_norm2 = nn.LayerNorm(out_channel) if args.convnetstyle else nn.BatchNorm2d(num_features=out_channel)
         self.head_activation2 = nn.GELU() if args.convnetstyle else nn.ReLU()
         self.drop2 = nn.Dropout(0.1) if args.decoder_dropout >0.0 else nn.Identity()
-                                  
+        
+        """
+
+        self.head = nn.Sequential(nn.Conv2d(in_channel, out_channel, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(num_features=out_channel),
+                                  nn.ReLU(),
+                                  nn.Dropout(args.decoder_dropout) if args.decoder_dropout >0.0 else nn.Identity(),
+                                  nn.Conv2d(out_channel, out_channel, 3, padding=1, bias=False),
+                                  nn.BatchNorm2d(num_features=out_channel),
+                                  nn.ReLU(),
+                                  nn.Dropout(0.1) if args.decoder_dropout >0.0 else nn.Identity(),
+                                  )
+        
         self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
-        self.is_convnextstyle= True if args.convnetstyle else False
         self._init_weight()
+
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight)
+            elif isinstance(m, SynchronizedBatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+
+    def forward(self, x,low_feature):
+        x = self.upsample(x)
+        x = torch.cat((x,low_feature),dim=1)
+        x = self.head(x)
+
+        return x
+                                  
+        #self.upsample = nn.Upsample(scale_factor = scale_factor, mode='bilinear', align_corners=True)
+        #self.is_convnextstyle= True if args.convnetstyle else False
+        #self._init_weight()
+    
+    """
 
     def _init_weight(self):
         for m in self.modules():
@@ -62,6 +99,8 @@ class Decoder_revised(nn.Module):
         if self.is_convnextstyle:
             x = x.permute(0, 3, 1, 2)
         return x
+
+        """
 
 class Decoder(nn.Module):
     def __init__(self, num_classes, backbone, BatchNorm,low_level_inplanes):
