@@ -81,9 +81,9 @@ class Angio_Dataset(torch.utils.data.Dataset):
                             annotated_dot = 255-annotated_dot
                             np.save("/data/angiosegmentation/heatmap/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'_'+str(self.args.sigma)+'.npy',annotated_dot)
 
-                        if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
-                            centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
-                            cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
+                        #if not os.path.exists("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png'):
+                        #    centerline_img = draw_centerline('/data/angiosegmentation/mask_correct/'+i[1]['segmentation'])
+                        #    cv2.imwrite("/data/angiosegmentation/centerline/"+str(i[1]['origin'].split('-')[1].split('.')[0])+'.png',centerline_img)
                         
                         img_list.append(temp)                
                   
@@ -123,13 +123,13 @@ class Angio_Dataset(torch.utils.data.Dataset):
         
         img = img_load(image_path)
 
-        if self.args.centerline:
-            centerline = cv2.imread("/data/angiosegmentation/centerline/"+self.image_path[index][3]+'.png')
-            centerline = cv2.cvtColor(centerline, cv2.COLOR_BGR2GRAY)
-            target = np.zeros((h,w,self.num_classes+1))
-            target[:,:,-1] = centerline
-        else:
-            target = np.zeros((h,w,self.num_classes))
+        #if self.args.centerline:
+        #    centerline = cv2.imread("/data/angiosegmentation/centerline/"+self.image_path[index][3]+'.png')
+        #    centerline = cv2.cvtColor(centerline, cv2.COLOR_BGR2GRAY)
+        #    target = np.zeros((h,w,self.num_classes+1))
+        #    target[:,:,-1] = centerline
+        #else:
+        target = np.zeros((h,w,self.num_classes))
 
         for i in range(self.num_classes):
             target[:,:,i] = (target_index==i)*1
