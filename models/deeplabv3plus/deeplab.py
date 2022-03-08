@@ -15,8 +15,8 @@ class DeepLab(nn.Module):
         self.backbone = build_backbone(backbone, 16, BatchNorm)
         self.aspp = build_aspp(backbone, 16, BatchNorm,args)
 
-        self.decoder1 = Decoder_revised(384+256,256,2,args)
-        self.decoder2 = Decoder_revised(256+192,256,2,args)
+        self.decoder1 = Decoder_revised(256+256,256,2,args)
+        self.decoder2 = Decoder_revised(256+128,256,2,args)
         self.dropout = nn.Dropout(args.last_dropout) if args.last_dropout >0.0 else nn.Identity()
         self.cls = nn.Conv2d(256, 2, 1, padding = 0)
 
