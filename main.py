@@ -134,6 +134,14 @@ def train(args):
             optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+    
+    elif args.opt == 'adamw_lookahead':
+        if args.lr_backbone > 0.0:
+            base_opt = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+            optimizer = optim.Lookahead(base_opt, k=5, alpha=0.5)
+        else:
+            base_opt = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+            optimizer = optim.Lookahead(base_opt, k=5, alpha=0.5)
 
     elif args.opt == 'adamp':
         if args.lr_backbone > 0.0:
