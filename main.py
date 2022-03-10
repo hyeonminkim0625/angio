@@ -23,6 +23,7 @@ from optimizer import radam_lookahead as rl
 from warmup_scheduler import GradualWarmupScheduler
 from torch_ema import ExponentialMovingAverage
 from adamp import AdamP
+from adabelief_pytorch import AdaBelief
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Set Segmentation model', add_help=False)
@@ -134,6 +135,11 @@ def train(args):
             optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+    elif args.opt == 'adabelief':
+        if args.lr_backbone > 0.0:
+            optimizer = AdaBelief(param_dicts, lr = args.lr, weight_decay=args.weight_decay,fixed_decay=False, rectify=False)
+        else:
+            optimizer = AdaBelief(model.parameters(), lr = args.lr, weight_decay=args.weight_decay,fixed_decay=False, rectify=False)
     
     elif args.opt == 'adamw_lookahead':
         if args.lr_backbone > 0.0:
