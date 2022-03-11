@@ -144,9 +144,9 @@ def train(args):
 
     elif args.opt == 'adabelief':
         if args.lr_backbone > 0.0:
-            optimizer = AdaBelief(param_dicts, lr = args.lr, weight_decay=args.weight_decay,eps=1e-8,fixed_decay=False, rectify=False)
+            optimizer = AdaBelief(param_dicts, lr = args.lr, weight_decay=args.weight_decay,eps=1e-16,fixed_decay=False, rectify=False)
         else:
-            optimizer = AdaBelief(model.parameters(), lr = args.lr, weight_decay=args.weight_decay,eps=1e-8,fixed_decay=False, rectify=False)
+            optimizer = AdaBelief(model.parameters(), lr = args.lr, weight_decay=args.weight_decay,eps=1e-16,fixed_decay=False, rectify=False)
     
     elif args.opt == 'adamw_lookahead':
         if args.lr_backbone > 0.0:
