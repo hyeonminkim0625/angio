@@ -138,9 +138,9 @@ def train(args):
     
     elif args.opt == 'sgd':
         if args.lr_backbone > 0.0:
-            optimizer = torch.optim.SGD(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+            optimizer = torch.optim.SGD(param_dicts, lr = args.lr, weight_decay=args.weight_decay,momentum=0.9)
         else:
-            optimizer = torch.optim.SGD(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
+            optimizer = torch.optim.SGD(model.parameters(), lr = args.lr, weight_decay=args.weight_decay, momentum=0.9)
 
     elif args.opt == 'adabelief':
         if args.lr_backbone > 0.0:
