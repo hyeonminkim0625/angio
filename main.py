@@ -57,7 +57,6 @@ def get_args_parser():
     parser.add_argument('--label_smoothing', default=0.0, type=float)
     parser.add_argument('--ema', action='store_true')
     parser.add_argument('--convnetstyle', action='store_true')
-
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
     parser.add_argument('--mode',default='train',type=str)
@@ -140,6 +139,12 @@ def train(args):
             optimizer = AdaBelief(param_dicts, lr = args.lr, weight_decay=args.weight_decay,fixed_decay=False, rectify=False)
         else:
             optimizer = AdaBelief(model.parameters(), lr = args.lr, weight_decay=args.weight_decay,fixed_decay=False, rectify=False)
+    
+    elif args.opt == 'sgd':
+        if args.lr_backbone > 0.0:
+            optimizer = torch.optim.SGD(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
+        else:
+            optimizer = torch.optim.SGD(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     
     elif args.opt == 'adamw_lookahead':
         if args.lr_backbone > 0.0:
