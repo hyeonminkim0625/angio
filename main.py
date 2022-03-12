@@ -57,6 +57,9 @@ def get_args_parser():
     parser.add_argument('--label_smoothing', default=0.0, type=float)
     parser.add_argument('--ema', action='store_true')
     parser.add_argument('--convnetstyle', action='store_true')
+    parser.add_argument('--max_norm', default=0.1, type=float,
+                        help='gradient clipping max norm')
+
     #eval
     parser.add_argument('--output_dir', default='./result', help='sample prediction, ground truth')
     parser.add_argument('--mode',default='train',type=str)
@@ -134,18 +137,11 @@ def train(args):
             optimizer = torch.optim.AdamW(param_dicts, lr = args.lr, weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
-    
-    elif args.opt == 'sgd':
-        if args.lr_backbone > 0.0:
-            optimizer = torch.optim.SGD(param_dicts, lr = args.lr, weight_decay=args.weight_decay,momentum=0.9)
-        else:
-            optimizer = torch.optim.SGD(model.parameters(), lr = args.lr, weight_decay=args.weight_decay, momentum=0.9)
-
     elif args.opt == 'adabelief':
         if args.lr_backbone > 0.0:
-            optimizer = AdaBelief(param_dicts, lr = args.lr, weight_decay=args.weight_decay,eps=1e-16,fixed_decay=False, rectify=False)
+            optimizer = AdaBelief(param_dicts, lr = args.lr, weight_decay=args.weight_decay,fixed_decay=False, rectify=False)
         else:
-            optimizer = AdaBelief(model.parameters(), lr = args.lr, weight_decay=args.weight_decay,eps=1e-16,fixed_decay=False, rectify=False)
+            optimizer = AdaBelief(model.parameters(), lr = args.lr, weight_decay=args.weight_decay,fixed_decay=False, rectify=False)
     
     elif args.opt == 'sgd':
         if args.lr_backbone > 0.0:

@@ -41,6 +41,10 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         optimizer.zero_grad()
         loss.backward()
+
+        if args.max_norm > 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_norm)
+
         optimizer.step()
         if args.scheduler=='cosineannealing':
             scheduler.step(epoch+i/batch_num)
